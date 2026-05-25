@@ -55,6 +55,9 @@ dashboard: ## Launch Streamlit admin dashboard
 eval: ## Run RAG evaluation against qa_dataset.json
 	$(UV) run python scripts/eval_rag.py
 
+eval-ocr: ## Run OCR accuracy evaluation against annotated dataset
+	$(UV) run python scripts/eval_ocr.py --output reports/ocr_eval_latest.json
+
 load: ## Run Locust load test (headless, 10 users, 30s)
 	$(UV) run locust -f tests/load/locustfile_rag.py --headless -u 10 -r 2 -t 30s --host http://localhost:8000
 

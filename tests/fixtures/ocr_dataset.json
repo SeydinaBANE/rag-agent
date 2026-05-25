@@ -1,0 +1,41 @@
+[
+  {
+    "id": "invoice_001",
+    "doc_type": "invoice",
+    "description": "Simple invoice with vendor, client, and total",
+    "ground_truth": {
+      "invoice_number": "INV-2024-001",
+      "vendor_name": "Tech Solutions SARL",
+      "client_name": "Acme Corporation",
+      "total_amount": 1450.00,
+      "currency": "EUR",
+      "date": "2024-03-15"
+    },
+    "min_field_confidence": 0.75,
+    "required_fields": ["invoice_number", "vendor_name", "total_amount"]
+  },
+  {
+    "id": "receipt_001",
+    "doc_type": "receipt",
+    "description": "Supermarket receipt",
+    "ground_truth": {
+      "merchant": "Carrefour Market",
+      "total": 47.83,
+      "date": "2024-03-20"
+    },
+    "min_field_confidence": 0.70,
+    "required_fields": ["merchant", "total"]
+  },
+  {
+    "id": "contract_001",
+    "doc_type": "contract",
+    "description": "Service agreement between two companies",
+    "ground_truth": {
+      "contract_type": "Service Agreement",
+      "effective_date": "2024-01-01",
+      "jurisdiction": "France"
+    },
+    "min_field_confidence": 0.65,
+    "required_fields": ["contract_type", "effective_date"]
+  }
+]
