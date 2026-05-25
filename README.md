@@ -2,9 +2,12 @@
 
 > Production-ready RAG + AI Agent platform — FastAPI · LangGraph · OpenRouter · ChromaDB
 
-[![CI](https://github.com/baneseydina/rag-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/baneseydina/rag-agent/actions/workflows/ci.yml)
-[![CD](https://github.com/baneseydina/rag-agent/actions/workflows/cd.yml/badge.svg)](https://github.com/baneseydina/rag-agent/actions/workflows/cd.yml)
-[![codecov](https://codecov.io/gh/baneseydina/rag-agent/branch/main/graph/badge.svg)](https://codecov.io/gh/baneseydina/rag-agent)
+[![CI](https://github.com/SeydinaBANE/rag-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/SeydinaBANE/rag-agent/actions/workflows/ci.yml)
+[![CD](https://github.com/SeydinaBANE/rag-agent/actions/workflows/cd.yml/badge.svg)](https://github.com/SeydinaBANE/rag-agent/actions/workflows/cd.yml)
+[![codecov](https://codecov.io/gh/SeydinaBANE/rag-agent/branch/main/graph/badge.svg)](https://codecov.io/gh/SeydinaBANE/rag-agent)
+[![Python](https://img.shields.io/badge/python-3.12-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 ## Quickstart
 
