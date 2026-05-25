@@ -1,0 +1,58 @@
+# Virtual envs
+.venv/
+.venv312/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.venv/
+venv/
+env/
+
+# UV
+.uv/
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Mypy
+.mypy_cache/
+
+# Ruff
+.ruff_cache/
+
+# Pytest
+.pytest_cache/
+
+# Reports (keep structure, ignore generated files)
+reports/*.json
+!reports/.gitkeep
+
+# Secrets baseline
+.secrets.baseline
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Docker
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

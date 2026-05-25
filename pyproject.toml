@@ -1,0 +1,145 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rag-agent"
+dynamic = ["version"]
+description = "Production-ready RAG + AI Agent platform with FastAPI, LangGraph, and OpenRouter"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "baneseydina", email = "seriegalsen9@gmail.com" }]
+keywords = ["rag", "llm", "genai", "fastapi", "langgraph", "openrouter"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python :: 3.12",
+  "Framework :: FastAPI",
+]
+dependencies = [
+  # Web framework
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.32",
+  "python-multipart>=0.0.12",
+  # Config & validation
+  "pydantic>=2.10",
+  "pydantic-settings>=2.7",
+  "python-dotenv>=1.0",
+  # LLM & RAG
+  "openai>=1.58",           # OpenRouter est compatible openai client
+  "llama-index-core>=0.12",
+  "llama-index-vector-stores-chroma>=0.4",
+  "llama-index-embeddings-openai>=0.3",
+  "chromadb>=0.6",
+  # Agents & orchestration
+  "langgraph>=0.2",
+  "langchain-core>=0.3",
+  "langchain-openai>=0.3",
+  # Async & queues
+  "celery[redis]>=5.4",
+  "redis>=5.2",
+  # Database
+  "sqlalchemy[asyncio]>=2.0",
+  "alembic>=1.14",
+  "asyncpg>=0.30",
+  # Storage
+  "minio>=7.2",
+  # HTTP client
+  "httpx>=0.28",
+  # Logging
+  "structlog>=24.4",
+  # Rate limiting
+  "slowapi>=0.1.9",
+  # CLI
+  "typer>=0.15",
+  # Observability
+  "opentelemetry-api>=1.29",
+  "opentelemetry-sdk>=1.29",
+  "opentelemetry-instrumentation-fastapi>=0.50b0",
+  "prometheus-client>=0.21",
+  # Document processing
+  "pypdf>=5.1",
+  "python-docx>=1.1",
+  "pytesseract>=0.3",
+  "Pillow>=11.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3",
+  "pytest-asyncio>=0.25",
+  "pytest-cov>=6.0",
+  "httpx>=0.28",
+  "ruff>=0.9",
+  "mypy>=1.14",
+  "pre-commit>=4.0",
+  "locust>=2.32",
+]
+eval = [
+  "ragas>=0.2",
+  "datasets>=3.2",
+]
+guardrails = [
+  "presidio-analyzer>=2.2",
+  "presidio-anonymizer>=2.2",
+]
+dashboard = [
+  "streamlit>=1.41",
+  "plotly>=5.24",
+]
+finetune = [
+  "unsloth",
+  "torch>=2.5",
+  "transformers>=4.47",
+]
+
+[project.scripts]
+rag-agent = "rag_agent.cli:app"
+
+[project.urls]
+Repository = "https://github.com/baneseydina/rag-agent"
+
+[tool.hatch.version]
+source = "vcs"
+fallback-version = "0.1.0"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rag_agent"]
+
+# ── Ruff ────────────────────────────────────────────────────────────────────
+[tool.ruff]
+src = ["src"]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "PT", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["rag_agent"]
+
+# ── Mypy ────────────────────────────────────────────────────────────────────
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["chromadb.*", "llama_index.*", "langgraph.*", "celery.*", "structlog.*"]
+ignore_missing_imports = true
+
+# ── Pytest ──────────────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "--cov=src/rag_agent --cov-report=term-missing --cov-fail-under=80"
+
+# ── Coverage ────────────────────────────────────────────────────────────────
+[tool.coverage.run]
+source = ["src/rag_agent"]
+omit = ["*/migrations/*", "*/cli.py"]
+
+[tool.coverage.report]
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]

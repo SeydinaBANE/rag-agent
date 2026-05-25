@@ -1,0 +1,39 @@
+name: RAG Evaluation
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"  # chaque lundi à 6h
+  workflow_dispatch:
+
+jobs:
+  eval:
+    name: Ragas Evaluation
+    runs-on: ubuntu-latest
+    env:
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.12"
+      - run: uv pip install -e ".[dev,eval]"
+      - name: Run RAG evaluation
+        run: uv run python scripts/eval_rag.py --output reports/eval_$(date +%Y-%m-%d).json
+      - name: Upload eval report
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-report-${{ github.run_id }}
+          path: reports/eval_*.json
+      - name: Check quality gates
+        run: |
+          uv run python -c "
+          import json, sys
+          with open('reports/eval_latest.json') as f:
+              r = json.load(f)
+          faithfulness = r.get('faithfulness', 0)
+          print(f'Faithfulness: {faithfulness:.3f}')
+          if faithfulness < 0.80:
+              print('FAIL: faithfulness below threshold 0.80')
+              sys.exit(1)
+          print('PASS')
+          "

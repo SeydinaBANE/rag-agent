@@ -1,0 +1,14 @@
+[
+  {
+    "question": "What is Retrieval-Augmented Generation (RAG)?",
+    "ground_truth": "RAG is a technique that combines information retrieval with language model generation. It retrieves relevant documents from a knowledge base and uses them as context for the LLM to generate grounded answers."
+  },
+  {
+    "question": "What are the main components of a RAG pipeline?",
+    "ground_truth": "A RAG pipeline consists of: document ingestion (chunking and embedding), a vector store for similarity search, a retriever that fetches relevant chunks, and a language model that generates answers based on retrieved context."
+  },
+  {
+    "question": "How does semantic caching reduce LLM costs?",
+    "ground_truth": "Semantic caching stores previous query-response pairs. When a new query is semantically similar to a cached one (above a cosine similarity threshold), the cached response is returned without calling the LLM, saving tokens and reducing latency."
+  }
+]
