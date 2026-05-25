@@ -54,6 +54,9 @@ class Settings(BaseSettings):
     chunk_overlap: int = 64
     top_k: int = 5
 
+    # OpenTelemetry — set to OTLP endpoint (e.g. http://jaeger:4317) to export traces
+    otel_exporter_endpoint: str = ""
+
     # App
     app_env: str = "development"
     log_level: str = "INFO"

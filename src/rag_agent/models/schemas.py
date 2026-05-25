@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+import uuid
+from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # ── Chat ────────────────────────────────────────────────────────────────────
@@ -47,6 +50,25 @@ class JobStatus(BaseModel):
     status: str  # PENDING | STARTED | SUCCESS | FAILURE
     result: dict[str, object] | None = None
     error: str | None = None
+
+
+# ── API Keys ────────────────────────────────────────────────────────────────
+
+class KeyCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
+
+
+class KeyInfo(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    name: str
+    created_at: datetime
+    last_used_at: datetime | None = None
+
+
+class KeyCreated(KeyInfo):
+    key: str  # returned only on creation, never again
 
 
 # ── Eval ────────────────────────────────────────────────────────────────────

@@ -1,0 +1,23 @@
+meta {
+  name: Agent Run (ReAct multi-step)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{base_url}}/api/v1/agent/run
+  body: json
+  auth: none
+}
+
+headers {
+  X-API-Key: {{api_key}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "objective": "Search for the latest benchmark results for Mistral-7B and summarize them.",
+    "session_id": "test-session"
+  }
+}

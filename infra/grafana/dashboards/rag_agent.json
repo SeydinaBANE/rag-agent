@@ -1,0 +1,136 @@
+{
+  "uid": "rag-agent-overview",
+  "title": "rag-agent",
+  "tags": ["rag", "llm"],
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Request Rate (req/s)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 6 },
+      "targets": [{
+        "expr": "sum(rate(http_requests_total{job=\"rag-agent\"}[1m])) by (endpoint)",
+        "legendFormat": "{{endpoint}}"
+      }]
+    },
+    {
+      "id": 2,
+      "title": "Latency p95 (s)",
+      "type": "timeseries",
+      "gridPos": { "x": 8, "y": 0, "w": 8, "h": 6 },
+      "targets": [{
+        "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"rag-agent\"}[5m])) by (le, endpoint))",
+        "legendFormat": "p95 {{endpoint}}"
+      }]
+    },
+    {
+      "id": 3,
+      "title": "Error Rate (%)",
+      "type": "stat",
+      "gridPos": { "x": 16, "y": 0, "w": 8, "h": 6 },
+      "targets": [{
+        "expr": "100 * sum(rate(http_requests_total{job=\"rag-agent\",status_code=~\"5..\"}[5m])) / sum(rate(http_requests_total{job=\"rag-agent\"}[5m]))",
+        "legendFormat": "error %"
+      }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "percent", "thresholds": { "steps": [
+        { "color": "green", "value": null },
+        { "color": "yellow", "value": 1 },
+        { "color": "red", "value": 5 }
+      ]}}}
+    },
+    {
+      "id": 4,
+      "title": "RAG Queries/min",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 6, "w": 8, "h": 6 },
+      "targets": [
+        { "expr": "rate(rag_queries_total{cached=\"false\"}[1m]) * 60", "legendFormat": "live" },
+        { "expr": "rate(rag_queries_total{cached=\"true\"}[1m]) * 60",  "legendFormat": "cached" }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Cache Hit Rate (%)",
+      "type": "stat",
+      "gridPos": { "x": 8, "y": 6, "w": 8, "h": 6 },
+      "targets": [{
+        "expr": "100 * rate(rag_queries_total{cached=\"true\"}[5m]) / rate(rag_queries_total[5m])",
+        "legendFormat": "cache hit %"
+      }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "percent", "thresholds": { "steps": [
+        { "color": "red", "value": null },
+        { "color": "yellow", "value": 30 },
+        { "color": "green", "value": 60 }
+      ]}}}
+    },
+    {
+      "id": 6,
+      "title": "Retrieval Score (p50)",
+      "type": "stat",
+      "gridPos": { "x": 16, "y": 6, "w": 8, "h": 6 },
+      "targets": [{
+        "expr": "histogram_quantile(0.50, rate(rag_retrieval_score_bucket[5m]))",
+        "legendFormat": "p50 score"
+      }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "percentunit" } }
+    },
+    {
+      "id": 7,
+      "title": "LLM Tokens/min",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 6 },
+      "targets": [
+        { "expr": "rate(llm_tokens_total{type=\"prompt\"}[1m]) * 60",     "legendFormat": "prompt {{model}}" },
+        { "expr": "rate(llm_tokens_total{type=\"completion\"}[1m]) * 60", "legendFormat": "completion {{model}}" }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Model Router Calls/min",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 6 },
+      "targets": [{
+        "expr": "rate(model_router_calls_total[1m]) * 60",
+        "legendFormat": "{{model}} ({{mode}})"
+      }]
+    },
+    {
+      "id": 9,
+      "title": "Estimated Cost (USD/hr)",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 18, "w": 8, "h": 6 },
+      "targets": [{
+        "expr": "rate(model_router_cost_usd_total[1h]) * 3600",
+        "legendFormat": "USD/hr"
+      }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "currencyUSD" } }
+    },
+    {
+      "id": 10,
+      "title": "Guardrail Blocks/min",
+      "type": "timeseries",
+      "gridPos": { "x": 8, "y": 18, "w": 8, "h": 6 },
+      "targets": [{
+        "expr": "rate(guardrail_blocked_total[1m]) * 60",
+        "legendFormat": "{{reason}}"
+      }]
+    },
+    {
+      "id": 11,
+      "title": "OCR Documents/min",
+      "type": "timeseries",
+      "gridPos": { "x": 16, "y": 18, "w": 8, "h": 6 },
+      "targets": [{
+        "expr": "rate(ocr_documents_total[1m]) * 60",
+        "legendFormat": "{{doc_type}}"
+      }]
+    }
+  ]
+}

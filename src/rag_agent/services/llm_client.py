@@ -33,21 +33,28 @@ async def complete(
     model: str | None = None,
     temperature: float = 0.2,
     max_tokens: int = 1024,
+    trace_name: str = "llm-complete",
+    trace_id: str | None = None,
 ) -> tuple[str, dict[str, int]]:
     """Return (answer, usage_dict)."""
+    from rag_agent.services.langfuse_client import trace_generation
+
     model = model or settings.default_model
     try:
-        response = await get_client().chat.completions.create(
-            model=model,
-            messages=messages,
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
-        usage = {
-            "prompt_tokens": response.usage.prompt_tokens if response.usage else 0,
-            "completion_tokens": response.usage.completion_tokens if response.usage else 0,
-        }
-        content = response.choices[0].message.content or ""
+        with trace_generation(trace_name, model, list(messages), trace_id=trace_id) as meta:  # type: ignore[arg-type]
+            response = await get_client().chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+            usage = {
+                "prompt_tokens": response.usage.prompt_tokens if response.usage else 0,
+                "completion_tokens": response.usage.completion_tokens if response.usage else 0,
+            }
+            content = response.choices[0].message.content or ""
+            meta["output"] = content
+            meta["usage"] = usage
         log.debug("llm_complete", model=model, tokens=usage)
         return content, usage
     except Exception as exc:

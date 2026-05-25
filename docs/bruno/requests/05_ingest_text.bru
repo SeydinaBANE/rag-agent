@@ -1,0 +1,23 @@
+meta {
+  name: Ingest Text
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{base_url}}/api/v1/ingest/text
+  body: json
+  auth: none
+}
+
+headers {
+  X-API-Key: {{api_key}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "text": "LangGraph is a library for building stateful multi-actor applications with LLMs. It extends LangChain with the ability to coordinate multiple chains or actors across multiple steps of computation in a cyclic manner.",
+    "source": "langgraph-intro"
+  }
+}

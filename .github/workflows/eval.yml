@@ -18,12 +18,12 @@ jobs:
           python-version: "3.12"
       - run: uv pip install -e ".[dev,eval]"
       - name: Run RAG evaluation
-        run: uv run python scripts/eval_rag.py --output reports/eval_$(date +%Y-%m-%d).json
+        run: uv run python scripts/eval_rag.py --output reports/eval_latest.json
       - name: Upload eval report
         uses: actions/upload-artifact@v4
         with:
           name: eval-report-${{ github.run_id }}
-          path: reports/eval_*.json
+          path: reports/eval_latest.json
       - name: Check quality gates
         run: |
           uv run python -c "

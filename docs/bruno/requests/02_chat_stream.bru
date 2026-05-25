@@ -1,0 +1,15 @@
+meta {
+  name: Chat Stream (SSE)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/api/v1/chat/stream?query=What is RAG?
+  body: none
+  auth: none
+}
+
+headers {
+  X-API-Key: {{api_key}}
+}

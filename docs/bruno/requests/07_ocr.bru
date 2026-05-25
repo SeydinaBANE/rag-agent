@@ -1,0 +1,21 @@
+meta {
+  name: OCR Extraction
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{base_url}}/api/v1/ocr
+  body: multipartForm
+  auth: none
+}
+
+headers {
+  X-API-Key: {{api_key}}
+}
+
+body:multipart {
+  file: @file(/path/to/invoice.png)
+  doc_type: invoice
+  lang: fra+eng
+}

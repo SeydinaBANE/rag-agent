@@ -34,5 +34,30 @@ def eval(
     # TODO: call eval script
 
 
+@app.command("create-key")
+def create_key(
+    name: str = typer.Argument(..., help="Human-readable name for this API key"),
+) -> None:
+    """Bootstrap: create the first API key directly via the database (no HTTP auth needed)."""
+    import asyncio
+    import secrets
+    import uuid
+
+    from rag_agent.api.v1.deps import hash_key
+    from rag_agent.models.database import ApiKey, async_session
+
+    async def _insert() -> str:
+        raw = secrets.token_urlsafe(32)
+        async with async_session() as db:
+            db.add(ApiKey(id=uuid.uuid4(), key_hash=hash_key(raw), name=name))
+            await db.commit()
+        return raw
+
+    raw_key = asyncio.run(_insert())
+    typer.echo(f"\nAPI key '{name}' created:")
+    typer.echo(f"  {raw_key}")
+    typer.echo("\nStore this securely — it will not be shown again.\n")
+
+
 if __name__ == "__main__":
     app()

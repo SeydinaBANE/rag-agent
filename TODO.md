@@ -9,7 +9,7 @@
 - [x] `Dockerfile` multi-stage
 - [x] `docker-compose.yml` (app + ChromaDB + Postgres + Redis + MinIO + Langfuse + Grafana)
 - [x] `.env.example`
-- [ ] `alembic` init + migration initiale
+- [x] `alembic` init + migration initiale
 - [x] `src/rag_agent/core/config.py` (pydantic-settings)
 - [x] `src/rag_agent/core/logging.py` (structlog JSON)
 - [x] `src/rag_agent/core/exceptions.py`
@@ -18,25 +18,25 @@
 - [x] `src/rag_agent/__init__.py` (version)
 
 ## Phase 0b — Transverses
-- [ ] OpenTelemetry middleware
-- [ ] Prometheus metrics (`/metrics`)
-- [ ] Dashboard Grafana (JSON dans `infra/grafana/dashboards/`)
-- [ ] Langfuse tracing wrapper
-- [ ] `src/rag_agent/services/semantic_cache.py`
-- [ ] Endpoint SSE `/api/v1/chat/stream`
-- [ ] Auth API key (table `api_keys` + dépendance FastAPI)
-- [ ] Rate limiting (`slowapi`)
-- [ ] Tests de charge Locust (`tests/load/`)
-- [ ] Dataset eval + script Ragas (`tests/eval/`, `scripts/eval_rag.py`)
-- [ ] Job CI `eval` (GitHub Actions)
+- [x] OpenTelemetry middleware
+- [x] Prometheus metrics (`/metrics`)
+- [x] Dashboard Grafana (JSON dans `infra/grafana/dashboards/`)
+- [x] Langfuse tracing wrapper
+- [x] `src/rag_agent/services/semantic_cache.py`
+- [x] Endpoint SSE `/api/v1/chat/stream`
+- [x] Auth API key (table `api_keys` + dépendance FastAPI)
+- [x] Rate limiting (`slowapi`)
+- [x] Tests de charge Locust (`tests/load/`)
+- [x] Dataset eval + script Ragas (`tests/eval/`, `scripts/eval_rag.py`)
+- [x] Job CI `eval` (GitHub Actions)
 
 ## Phase 0c — Différenciants
-- [ ] LangGraph graph (`src/rag_agent/services/graph.py`)
-- [ ] Guardrails PII (Presidio) + hallucination scoring
-- [ ] `src/rag_agent/services/model_router.py` (A/B test, cheapest, fastest)
-- [ ] Event-driven ingestion MinIO webhook + Celery
-- [ ] Streamlit dashboard (`src/rag_agent/dashboard/`)
-- [ ] Fine-tuning pipeline (`scripts/finetune/`)
+- [x] LangGraph graph (`src/rag_agent/services/graph.py`)
+- [x] Guardrails PII (Presidio) + hallucination scoring
+- [x] `src/rag_agent/services/model_router.py` (A/B test, cheapest, fastest)
+- [x] Event-driven ingestion MinIO webhook + Celery
+- [x] Streamlit dashboard (`src/rag_agent/dashboard/`)
+- [x] Fine-tuning pipeline (`scripts/finetune/`)
 
 ## Phase 1 — RAG documentaire
 - [x] Ingestion PDF/DOCX/HTML + OCR fallback (`services/document_loader.py`)
@@ -54,7 +54,7 @@
 - [x] Endpoint `POST /api/v1/ingest/text`
 - [x] Endpoint `GET /api/v1/jobs/{id}`
 - [x] Schémas Pydantic (`models/schemas.py`)
-- [ ] Endpoint `/api/v1/evaluate` (Ragas)
+- [x] Endpoint `/api/v1/evaluate` (Ragas)
 - [x] Tests unitaires chunker, document_loader, BM25
 - [x] Tests intégration chat + ingest endpoints
 
@@ -71,17 +71,18 @@
 - [x] Tests : 18 nouveaux tests (tools, memory, endpoint)
 
 ## Phase 3 — OCR pipeline avancé
-- [ ] Preprocessing image (deskew, denoise)
-- [ ] Extraction structurée JSON via OpenRouter vision
-- [ ] Score de confiance par champ
-- [ ] Tests avec dataset annoté
+- [x] Preprocessing image (deskew, denoise)
+- [x] Extraction structurée JSON via OpenRouter vision
+- [x] Score de confiance par champ
+- [x] Tests avec dataset annoté
 
 ## CI/CD
-- [ ] `.github/workflows/ci.yml` (lint → test → build → security)
-- [ ] `.github/workflows/cd.yml` (tag → push GHCR → release)
-- [ ] Badges README
+- [x] `.github/workflows/ci.yml` (lint → test → build → security)
+- [x] `.github/workflows/cd.yml` (tag → push GHCR → release)
+- [x] `.github/workflows/eval.yml` (Ragas evaluation hebdomadaire)
+- [x] Badges README
 
 ## Documentation
-- [ ] README avec architecture diagram (Mermaid)
-- [ ] `docs/finetune.md`
-- [ ] Postman/Bruno collection pour l'API
+- [x] README avec architecture diagram (Mermaid)
+- [x] `docs/finetune.md`
+- [x] Postman/Bruno collection pour l'API (`docs/bruno/`)
