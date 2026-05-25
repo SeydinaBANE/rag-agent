@@ -58,11 +58,17 @@
 - [x] Tests unitaires chunker, document_loader, BM25
 - [x] Tests intégration chat + ingest endpoints
 
-## Phase 2 — Agent multi-étapes (LangGraph)
-- [ ] Agent ReAct avec tools : web search, SQL, fichiers
-- [ ] Memory persistante par session (Redis)
-- [ ] Streaming SSE des steps agent
-- [ ] Workflow n8n complémentaire
+## Phase 2 — Agent multi-étapes (LangGraph) ✅
+- [x] Tools : web_search (DuckDuckGo), fetch_url, rag_search, sql_query, generate_report
+- [x] ReAct agent LangGraph avec boucle conditionnelle (max 8 steps)
+- [x] Memory Redis par session avec compression LLM automatique
+- [x] `POST /api/v1/agent/run` — exécution synchrone
+- [x] `GET /api/v1/agent/run/stream` — SSE step-by-step
+- [x] `GET /api/v1/agent/run/sessions/{id}` — historique session
+- [x] `DELETE /api/v1/agent/run/sessions/{id}` — suppression session
+- [x] Workflow n8n veille concurrentielle (infra/n8n/workflow_competitive_intel.json)
+- [x] n8n dans docker-compose
+- [x] Tests : 18 nouveaux tests (tools, memory, endpoint)
 
 ## Phase 3 — OCR pipeline avancé
 - [ ] Preprocessing image (deskew, denoise)

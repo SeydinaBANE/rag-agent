@@ -78,10 +78,11 @@ async def metrics() -> Response:
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
-from rag_agent.api.v1 import agent, chat, ingest, jobs, webhooks
+from rag_agent.api.v1 import agent, agent_run, chat, ingest, jobs, webhooks
 
 app.include_router(chat.router, prefix="/api/v1")
 app.include_router(agent.router, prefix="/api/v1")
+app.include_router(agent_run.router, prefix="/api/v1")
 app.include_router(ingest.router, prefix="/api/v1")
 app.include_router(jobs.router, prefix="/api/v1")
 app.include_router(webhooks.router, prefix="/api/v1")

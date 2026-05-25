@@ -1,0 +1,124 @@
+{
+  "name": "Veille Concurrentielle — rag-agent",
+  "description": "Workflow n8n : reçoit un nom d'entreprise via webhook, lance l'agent IA multi-étapes, envoie le rapport par email.",
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "position": [100, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "competitive-intel",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "webhookId": "competitive-intel"
+    },
+    {
+      "id": "validate",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.code",
+      "position": [320, 300],
+      "parameters": {
+        "jsCode": "const body = $input.first().json;\nif (!body.company) throw new Error('Missing company field');\nreturn [{ json: { company: body.company, email: body.email || '', session_id: `ci-${Date.now()}` } }];"
+      }
+    },
+    {
+      "id": "run_agent",
+      "name": "Run RAG Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [540, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://app:8000/api/v1/agent/run",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-API-Key", "value": "={{ $env.RAG_AGENT_API_KEY }}" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "objective": "=Recherche une veille concurrentielle complète sur l'entreprise {{ $json.company }}. Cherche: dernières actualités, produits récents, stratégie, points forts et faibles. Génère un rapport structuré.",
+          "session_id": "={{ $json.session_id }}"
+        },
+        "options": { "timeout": 120000 }
+      }
+    },
+    {
+      "id": "format_report",
+      "name": "Format Report",
+      "type": "n8n-nodes-base.code",
+      "position": [760, 300],
+      "parameters": {
+        "jsCode": "const agentResult = $input.first().json;\nconst company = $('Validate Input').first().json.company;\nconst steps = agentResult.steps || [];\nconst toolsUsed = [...new Set(steps.filter(s => s.tool).map(s => s.tool))];\n\nreturn [{\n  json: {\n    company,\n    answer: agentResult.answer,\n    total_steps: agentResult.total_steps,\n    tools_used: toolsUsed,\n    session_id: agentResult.session_id,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      }
+    },
+    {
+      "id": "save_report",
+      "name": "Save to MinIO",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [980, 200],
+      "parameters": {
+        "method": "PUT",
+        "url": "=http://minio:9000/rag-reports/{{ $json.company.toLowerCase().replace(/ /g, '-') }}-{{ $now.format('YYYY-MM-DD') }}.md",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "text/markdown",
+        "body": "={{ $json.answer }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "notify_slack",
+      "name": "Notify Slack",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [980, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "text": "=✅ Rapport de veille prêt pour *{{ $json.company }}*\n• Étapes : {{ $json.total_steps }}\n• Outils utilisés : {{ $json.tools_used.join(', ') }}\n• Session : `{{ $json.session_id }}`"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "respond",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [1200, 300],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": { "main": [[{ "node": "Validate Input", "type": "main", "index": 0 }]] },
+    "Validate Input": { "main": [[{ "node": "Run RAG Agent", "type": "main", "index": 0 }]] },
+    "Run RAG Agent": { "main": [[{ "node": "Format Report", "type": "main", "index": 0 }]] },
+    "Format Report": {
+      "main": [
+        [
+          { "node": "Save to MinIO", "type": "main", "index": 0 },
+          { "node": "Notify Slack", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Save to MinIO": { "main": [[{ "node": "Webhook Response", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Paris"
+  },
+  "meta": {
+    "usage": "Import in n8n UI: Settings → Import Workflow. Set env vars: RAG_AGENT_API_KEY, SLACK_WEBHOOK_URL. Trigger: POST http://n8n:5678/webhook/competitive-intel {\"company\": \"OpenAI\", \"email\": \"user@example.com\"}"
+  }
+}
