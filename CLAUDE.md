@@ -48,8 +48,8 @@ Run a single test: `uv run pytest tests/unit/test_guardrails.py::test_toxicity_d
 ```bash
 rag-agent create-key <name>   # bootstrap API key (writes to DB directly, no HTTP auth needed)
 rag-agent serve               # production server (no reload)
-rag-agent ingest <path>       # STUB — not yet implemented
-rag-agent eval                # STUB — not yet implemented
+rag-agent ingest <path>       # ingest a local file or directory into ChromaDB
+rag-agent eval                # run Ragas evaluation against qa_dataset.json
 ```
 
 ## Local service URLs (after `make up`)
@@ -187,6 +187,8 @@ All endpoints require `X-API-Key` header.
 
 ## Testing notes
 - `tests/conftest.py` globally overrides `require_api_key` to bypass the DB — any request with a non-empty `X-API-Key` header passes. Do not re-apply auth overrides in individual test files.
+- `make test` (full suite) requires Postgres and Redis running — use `make up` first, or run `make test-unit` for tests that need neither.
+- Before running the full suite locally for the first time, run `uv run alembic upgrade head` to create the schema in your test DB.
 - Integration tests in `tests/integration/` hit real FastAPI routes but mock downstream services (LLM, ChromaDB, etc.). They do not require Docker.
 - Manual API testing: import `docs/bruno/` into the Bruno client (or use `/docs` Swagger in dev mode).
 - `tests/load/locustfile_rag.py` runs Locust load tests; `tests/eval/` contains Ragas evaluation datasets.
@@ -215,6 +217,18 @@ from openai import AsyncOpenAI
 client = AsyncOpenAI(base_url="https://openrouter.ai/api/v1", api_key=settings.openrouter_api_key)
 ```
 Model constants live in `settings`: `default_model` (`google/gemini-flash-1.5`), `quality_model` (`anthropic/claude-3.5-sonnet`). Use `model_router.select_model(mode=...)` for anything beyond the default. Never hardcode model strings outside `config.py`.
+
+## Pre-commit hooks
+`make install` installs these hooks; they run on every commit:
+- **ruff** — lint + format (auto-fix applied)
+- **mypy** — strict type check (same scope as `make lint`)
+- **detect-secrets** — blocks commits that introduce secret-looking strings. If you need to add a new allowed pattern (e.g., a test fixture with a fake key), update the baseline: `detect-secrets scan > .secrets.baseline` then commit the updated baseline.
+- **commitizen** — enforces conventional commit format (`feat:`, `fix:`, `chore:`, etc.) on commit messages. Commits that don't follow the format are rejected at `commit-msg` stage.
+- **hadolint** — Dockerfile linter
+- **no-commit-to-branch** — blocks direct commits to `production`
+
+## Port conflicts
+`make frontend-dev` starts Next.js on :3000. Langfuse (in Docker) also uses :3000. Running both simultaneously will conflict — stop Langfuse first (`docker compose stop langfuse`) or use the Docker frontend service on :3003 instead.
 
 ## Never do
 - Use `print()` instead of structlog

@@ -1,13 +1,18 @@
 # rag-agent
 
-> Production-ready RAG + AI Agent platform — FastAPI · LangGraph · OpenRouter · ChromaDB
+> Production-ready RAG + AI Agent platform — hybrid retrieval, multi-step ReAct agents, OCR pipeline, and full observability stack.
 
 [![CI](https://github.com/SeydinaBANE/rag-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/SeydinaBANE/rag-agent/actions/workflows/ci.yml)
 [![CD](https://github.com/SeydinaBANE/rag-agent/actions/workflows/cd.yml/badge.svg)](https://github.com/SeydinaBANE/rag-agent/actions/workflows/cd.yml)
 [![codecov](https://codecov.io/gh/SeydinaBANE/rag-agent/branch/main/graph/badge.svg)](https://codecov.io/gh/SeydinaBANE/rag-agent)
-[![Python](https://img.shields.io/badge/python-3.12-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![LangGraph](https://img.shields.io/badge/LangGraph-0.2-1C3C3C?logo=langchain&logoColor=white)](https://langchain-ai.github.io/langgraph/)
+[![uv](https://img.shields.io/badge/uv-package%20manager-DE5FE9?logo=uv&logoColor=white)](https://docs.astral.sh/uv/)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-FAB040?logo=pre-commit&logoColor=white)](https://pre-commit.com/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-22C55E)](LICENSE)
+[![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)](docker-compose.yml)
 
 ## Quickstart
 
