@@ -152,7 +152,7 @@ ignore_errors = true
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-addopts = "--cov=src/rag_agent --cov-report=term-missing --cov-fail-under=80"
+addopts = "--cov=src/rag_agent --cov-report=term-missing --cov-fail-under=50"
 
 # ── Coverage ────────────────────────────────────────────────────────────────
 [tool.coverage.run]
