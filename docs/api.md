@@ -51,7 +51,7 @@ Standard RAG Q&A. Checks semantic cache first; on miss runs full retrieval pipel
 ```json
 {
   "query": "What is retrieval-augmented generation?",
-  "model": "google/gemini-flash-1.5",
+  "model": "google/gemini-flash-1.5-8b",
   "session_id": "user-abc",
   "top_k": 5
 }
@@ -229,14 +229,14 @@ List document types and their extraction schemas.
 
 ---
 
-### `POST /api/v1/ocr`
+### `POST /api/v1/ocr/extract`
 
 Extract structured data from an image or PDF. Supported: `image/png`, `image/jpeg`, `image/tiff`, `image/webp`, `application/pdf`. Max 20 MB.
 
 **Pipeline:** deskew/denoise → Tesseract raw text → auto-detect document type → vision LLM structured extraction → confidence scoring.
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/ocr \
+curl -X POST http://localhost:8000/api/v1/ocr/extract \
   -H "X-API-Key: <key>" \
   -F "file=@invoice.png" \
   -F "doc_type=invoice" \

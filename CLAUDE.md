@@ -66,7 +66,7 @@ rag-agent eval                # run Ragas evaluation
 - `REDIS_URL` — `redis://localhost:6379/0`
 - `CHROMA_HOST` / `CHROMA_PORT` — ChromaDB (default port 8001)
 - `MINIO_ENDPOINT` / `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY`
-- `LANGFUSE_SECRET_KEY` / `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_HOST` — LLM tracing (optional; host defaults to `http://localhost:3000`)
+- `LANGFUSE_SECRET_KEY` / `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_HOST` — LLM tracing (optional; host defaults to `http://localhost:3000`; pin SDK to v2 — server image is `langfuse/langfuse:2`)
 - `API_SECRET_SALT` — seed for API key hashing (default `changeme` in dev)
 - `APP_ENV` — `development` (default) or `production`; production disables `/docs` and CORS wildcard
 - `LOG_LEVEL` — `INFO` (default); set to `DEBUG` for verbose output
@@ -75,6 +75,20 @@ rag-agent eval                # run Ragas evaluation
 - `MINIO_BUCKET` — object storage bucket name (default `rag-documents`)
 
 All settings live in `src/rag_agent/core/config.py` (pydantic-settings `Settings` class). Never add settings elsewhere.
+
+## Docker networking overrides
+`.env` uses `localhost` for all service URLs (correct for `make dev`). `docker-compose.yml` overrides these for the `app` and `worker` services so they resolve to Docker service names:
+
+| Variable | `.env` default | Docker override |
+|---|---|---|
+| `REDIS_URL` | `redis://localhost:6379/0` | `redis://redis:6379/0` |
+| `DATABASE_URL` | `postgresql+asyncpg://…@localhost/…` | `…@postgres:5432/ragdb` |
+| `CHROMA_HOST` | `localhost` | `chromadb` |
+| `CHROMA_PORT` | `8001` (host port) | `8000` (container port) |
+| `MINIO_ENDPOINT` | `localhost:9000` | `minio:9000` |
+| `LANGFUSE_HOST` | `http://localhost:3000` | `http://langfuse:3000` |
+
+When adding a new service dependency, add the Docker service name override under `environment:` in both `app` and `worker` sections of `docker-compose.yml`.
 
 ## Architecture
 
@@ -148,6 +162,12 @@ Upload accepted → base64-encoded → `ingest_document` Celery task dispatched 
 - Manual API testing: import `docs/bruno/` into the Bruno client (or use `/docs` Swagger in dev mode).
 - `tests/load/locustfile_rag.py` runs Locust load tests; `tests/eval/` contains Ragas evaluation datasets.
 - Coverage excludes `cli.py` and `dashboard/app.py` — gaps there are expected, not regressions.
+
+## Infrastructure notes
+- **MinIO bucket**: `rag-documents` is auto-created by the `minio-init` service on every `make up`. No manual step needed.
+- **Postgres init**: `infra/postgres/init.sql` creates the `n8n` and `langfuse` databases on first boot (only runs when the volume is fresh).
+- **Langfuse**: pinned to `langfuse/langfuse:2` (v3 requires ClickHouse). Python SDK pinned to `>=2.0,<3.0` to match.
+- **Rebuilding images**: after changing `pyproject.toml` or `Dockerfile`, run `docker compose build app worker` before `make up`.
 
 ## Coding conventions
 - All code fully typed — mypy strict mode

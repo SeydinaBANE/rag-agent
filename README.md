@@ -83,7 +83,8 @@ All endpoints require `X-API-Key` header. See [docs/api.md](docs/api.md) for ful
 | `/api/v1/ingest/file` | POST | Upload PDF/DOCX/TXT (async, max 50 MB) |
 | `/api/v1/ingest/text` | POST | Ingest raw text |
 | `/api/v1/jobs/{id}` | GET | Celery task status |
-| `/api/v1/ocr` | POST | Image → structured JSON extraction |
+| `/api/v1/ocr/extract` | POST | Image → structured JSON extraction |
+| `/api/v1/ocr/extract/url` | POST | OCR from URL |
 | `/api/v1/ocr/schemas` | GET | List supported document types |
 | `/api/v1/keys` | POST | Create API key |
 | `/api/v1/keys` | GET | List active keys |
