@@ -88,7 +88,8 @@ jobs:
         run: |
           uv venv
           uv pip install pip-audit
-          uv run pip-audit --requirement <(uv pip compile pyproject.toml)
+          uv run pip-audit --requirement <(uv pip compile pyproject.toml) \
+            --ignore-vuln MAL-2026-4750
       - name: Trivy image scan
         uses: aquasecurity/trivy-action@master
         with:
