@@ -18,8 +18,15 @@ _analyzer: object | None = None
 _anonymizer: object | None = None
 
 _PII_ENTITIES = [
-    "PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER", "CREDIT_CARD",
-    "IBAN_CODE", "IP_ADDRESS", "LOCATION", "NRP", "MEDICAL_LICENSE",
+    "PERSON",
+    "EMAIL_ADDRESS",
+    "PHONE_NUMBER",
+    "CREDIT_CARD",
+    "IBAN_CODE",
+    "IP_ADDRESS",
+    "LOCATION",
+    "NRP",
+    "MEDICAL_LICENSE",
 ]
 
 
@@ -27,6 +34,7 @@ def _get_analyzer() -> object:
     global _analyzer
     if _analyzer is None:
         from presidio_analyzer import AnalyzerEngine  # type: ignore[import]
+
         _analyzer = AnalyzerEngine()
     return _analyzer
 
@@ -35,6 +43,7 @@ def _get_anonymizer() -> object:
     global _anonymizer
     if _anonymizer is None:
         from presidio_anonymizer import AnonymizerEngine  # type: ignore[import]
+
         _anonymizer = AnonymizerEngine()
     return _anonymizer
 
@@ -44,7 +53,8 @@ def detect_pii(text: str, language: str = "en") -> list[dict[str, object]]:
     if not settings.guardrails_pii_enabled:
         return []
     try:
-        from presidio_analyzer import AnalyzerEngine  # type: ignore[import]
+        from presidio_analyzer import AnalyzerEngine  # type: ignore[import]  # noqa: F401
+
         analyzer = _get_analyzer()
         results = analyzer.analyze(text=text, entities=_PII_ENTITIES, language=language)  # type: ignore[union-attr]
         return [
@@ -52,7 +62,9 @@ def detect_pii(text: str, language: str = "en") -> list[dict[str, object]]:
             for r in results
         ]
     except ImportError:
-        log.warning("presidio_not_installed", hint="pip install presidio-analyzer presidio-anonymizer")
+        log.warning(
+            "presidio_not_installed", hint="pip install presidio-analyzer presidio-anonymizer"
+        )
         return []
 
 
@@ -61,8 +73,8 @@ def anonymize_pii(text: str, language: str = "en") -> str:
     if not settings.guardrails_pii_enabled:
         return text
     try:
-        from presidio_analyzer import AnalyzerEngine  # type: ignore[import]
-        from presidio_anonymizer import AnonymizerEngine  # type: ignore[import]
+        from presidio_analyzer import AnalyzerEngine  # type: ignore[import]  # noqa: F401
+        from presidio_anonymizer import AnonymizerEngine  # type: ignore[import]  # noqa: F401
 
         analyzer = _get_analyzer()
         anonymizer = _get_anonymizer()
@@ -78,8 +90,16 @@ def anonymize_pii(text: str, language: str = "en") -> str:
 # ── Toxicity Filter ──────────────────────────────────────────────────────────
 
 _TOXIC_KEYWORDS = {
-    "bomb", "hack", "exploit", "malware", "ransomware", "ddos",
-    "kill", "murder", "suicide", "illegal drugs",
+    "bomb",
+    "hack",
+    "exploit",
+    "malware",
+    "ransomware",
+    "ddos",
+    "kill",
+    "murder",
+    "suicide",
+    "illegal drugs",
 }
 
 
@@ -92,6 +112,7 @@ def check_toxicity(text: str) -> bool:
 
 
 # ── Hallucination Score ───────────────────────────────────────────────────────
+
 
 def score_hallucination_nli(answer: str, context_chunks: list[str]) -> float:
     """
@@ -115,6 +136,7 @@ def score_hallucination_nli(answer: str, context_chunks: list[str]) -> float:
 
 
 # ── Main guard function ───────────────────────────────────────────────────────
+
 
 def guard_input(text: str) -> str:
     """

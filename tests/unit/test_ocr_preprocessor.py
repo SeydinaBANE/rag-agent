@@ -2,12 +2,10 @@
 
 import io
 
-import pytest
 from PIL import Image
 
 from rag_agent.services.ocr.preprocessor import (
     PreprocessingResult,
-    _detect_skew,
     detect_document_type_from_text,
     preprocess,
 )

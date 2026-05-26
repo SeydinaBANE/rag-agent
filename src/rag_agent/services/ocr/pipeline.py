@@ -65,7 +65,11 @@ async def run_ocr_pipeline(
 
     # 3. Detect document type
     if doc_type:
-        detected_type = DocumentType(doc_type) if doc_type in DocumentType.__members__.values() else DocumentType.UNKNOWN
+        detected_type = (
+            DocumentType(doc_type)
+            if doc_type in DocumentType.__members__.values()
+            else DocumentType.UNKNOWN
+        )
     else:
         type_hint = detect_document_type_from_text(raw_text)
         try:

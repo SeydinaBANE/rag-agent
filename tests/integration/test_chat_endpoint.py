@@ -28,9 +28,16 @@ async def test_chat_returns_answer(
     client: AsyncClient,
 ) -> None:
     mock_retrieve.return_value = [
-        {"text": "RAG combines retrieval and generation.", "metadata": {"source": "test.pdf"}, "score": 0.92}
+        {
+            "text": "RAG combines retrieval and generation.",
+            "metadata": {"source": "test.pdf"},
+            "score": 0.92,
+        }
     ]
-    mock_complete.return_value = ("RAG stands for Retrieval-Augmented Generation.", {"prompt_tokens": 100, "completion_tokens": 20})
+    mock_complete.return_value = (
+        "RAG stands for Retrieval-Augmented Generation.",
+        {"prompt_tokens": 100, "completion_tokens": 20},
+    )
 
     response = await client.post(
         "/api/v1/chat",
@@ -45,7 +52,11 @@ async def test_chat_returns_answer(
     assert len(data["sources"]) == 1
 
 
-@patch("rag_agent.services.rag_pipeline.get_cached", new_callable=AsyncMock, return_value="Cached answer.")
+@patch(
+    "rag_agent.services.rag_pipeline.get_cached",
+    new_callable=AsyncMock,
+    return_value="Cached answer.",
+)
 async def test_chat_returns_cached(mock_get_cache: AsyncMock, client: AsyncClient) -> None:
     response = await client.post(
         "/api/v1/chat",

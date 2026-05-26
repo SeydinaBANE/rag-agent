@@ -27,6 +27,7 @@ def _get_client() -> Any:
         return None
     try:
         from langfuse import Langfuse  # type: ignore[import]
+
         _client = Langfuse(
             secret_key=settings.langfuse_secret_key,
             public_key=settings.langfuse_public_key,

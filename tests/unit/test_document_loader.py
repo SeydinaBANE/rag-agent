@@ -1,5 +1,3 @@
-import pytest
-
 from rag_agent.services.document_loader import load_bytes
 
 
@@ -18,6 +16,6 @@ def test_html_strips_tags() -> None:
 
 
 def test_unknown_extension_returns_text() -> None:
-    content = "plain content".encode()
+    content = b"plain content"
     result = load_bytes(content, "file.xyz")
     assert "plain content" in result

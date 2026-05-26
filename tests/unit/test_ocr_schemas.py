@@ -1,7 +1,5 @@
 """Unit tests for OCR schemas and extractor helpers."""
 
-import pytest
-
 from rag_agent.services.ocr.extractor import (
     _build_field,
     _parse_json_response,

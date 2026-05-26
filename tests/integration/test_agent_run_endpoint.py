@@ -15,10 +15,34 @@ MOCK_RESULT = {
     "answer": "OpenAI is an AI research company founded in 2015.",
     "total_steps": 3,
     "steps": [
-        {"step": 1, "type": "thought", "content": "I'll search for OpenAI news.", "tool": None, "done": False},
-        {"step": 1, "type": "tool_call", "content": "OpenAI latest news", "tool": "web_search", "done": False},
-        {"step": 1, "type": "observation", "content": "OpenAI released GPT-5...", "tool": "web_search", "done": False},
-        {"step": 2, "type": "answer", "content": "OpenAI is an AI research company.", "tool": None, "done": True},
+        {
+            "step": 1,
+            "type": "thought",
+            "content": "I'll search for OpenAI news.",
+            "tool": None,
+            "done": False,
+        },
+        {
+            "step": 1,
+            "type": "tool_call",
+            "content": "OpenAI latest news",
+            "tool": "web_search",
+            "done": False,
+        },
+        {
+            "step": 1,
+            "type": "observation",
+            "content": "OpenAI released GPT-5...",
+            "tool": "web_search",
+            "done": False,
+        },
+        {
+            "step": 2,
+            "type": "answer",
+            "content": "OpenAI is an AI research company.",
+            "tool": None,
+            "done": True,
+        },
     ],
 }
 
@@ -29,7 +53,9 @@ async def client() -> AsyncClient:
         yield c
 
 
-@patch("rag_agent.api.v1.agent_run.run_multi_agent", new_callable=AsyncMock, return_value=MOCK_RESULT)
+@patch(
+    "rag_agent.api.v1.agent_run.run_multi_agent", new_callable=AsyncMock, return_value=MOCK_RESULT
+)
 async def test_run_agent_success(mock_run: AsyncMock, client: AsyncClient) -> None:
     response = await client.post(
         "/api/v1/agent/run",
@@ -44,7 +70,9 @@ async def test_run_agent_success(mock_run: AsyncMock, client: AsyncClient) -> No
     assert len(data["steps"]) == 4
 
 
-@patch("rag_agent.api.v1.agent_run.run_multi_agent", new_callable=AsyncMock, return_value=MOCK_RESULT)
+@patch(
+    "rag_agent.api.v1.agent_run.run_multi_agent", new_callable=AsyncMock, return_value=MOCK_RESULT
+)
 async def test_run_agent_with_session_id(mock_run: AsyncMock, client: AsyncClient) -> None:
     response = await client.post(
         "/api/v1/agent/run",
@@ -72,10 +100,13 @@ async def test_run_agent_missing_key(client: AsyncClient) -> None:
     assert response.status_code == 401
 
 
-@patch("rag_agent.api.v1.agent_run.load_messages", return_value=[
-    {"role": "user", "content": "Research OpenAI", "ts": "1234567890"},
-    {"role": "assistant", "content": "OpenAI is...", "ts": "1234567891"},
-])
+@patch(
+    "rag_agent.api.v1.agent_run.load_messages",
+    return_value=[
+        {"role": "user", "content": "Research OpenAI", "ts": "1234567890"},
+        {"role": "assistant", "content": "OpenAI is...", "ts": "1234567891"},
+    ],
+)
 async def test_get_session_history(mock_load: object, client: AsyncClient) -> None:
     response = await client.get(
         "/api/v1/agent/run/sessions/test-session-123",

@@ -3,16 +3,15 @@
 from __future__ import annotations
 
 import io
-import math
 
 import structlog
-from PIL import Image, ImageEnhance, ImageFilter, ImageOps
+from PIL import Image, ImageEnhance, ImageFilter
 
 log = structlog.get_logger()
 
 
 class PreprocessingResult:
-    __slots__ = ("image", "deskew_angle", "original_size", "final_size", "warnings")
+    __slots__ = ("deskew_angle", "final_size", "image", "original_size", "warnings")
 
     def __init__(
         self,
@@ -131,6 +130,7 @@ def _detect_skew(image: Image.Image, n_angles: int = 180) -> float:
 
         # Horizontal projection: sum each row
         import numpy as np
+
         arr = np.array(rotated)
         row_sums = arr.sum(axis=1).tolist()
 
@@ -149,7 +149,14 @@ def detect_document_type_from_text(text: str) -> str:
     text_lower = text.lower()
     invoice_keywords = {"invoice", "facture", "bill", "amount due", "payment", "total"}
     receipt_keywords = {"receipt", "reçu", "thank you for", "total paid", "cashier"}
-    contract_keywords = {"agreement", "contrat", "contract", "parties", "whereas", "terms and conditions"}
+    contract_keywords = {
+        "agreement",
+        "contrat",
+        "contract",
+        "parties",
+        "whereas",
+        "terms and conditions",
+    }
 
     scores = {
         "invoice": sum(1 for k in invoice_keywords if k in text_lower),

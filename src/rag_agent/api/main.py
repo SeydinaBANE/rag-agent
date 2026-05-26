@@ -55,10 +55,13 @@ async def _rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONR
 
 app.add_exception_handler(RateLimitExceeded, _rate_limit_handler)  # type: ignore[arg-type]
 
+
 # ── OpenTelemetry ────────────────────────────────────────────────────────────
 def _setup_otel() -> None:
     try:
-        from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor  # type: ignore[import]
+        from opentelemetry.instrumentation.fastapi import (
+            FastAPIInstrumentor,  # type: ignore[import]
+        )
 
         if settings.otel_exporter_endpoint:
             from opentelemetry import trace
@@ -66,7 +69,10 @@ def _setup_otel() -> None:
             from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
             try:
-                from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter  # type: ignore[import]
+                from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+                    OTLPSpanExporter,  # type: ignore[import]
+                )
+
                 provider = TracerProvider()
                 provider.add_span_processor(
                     BatchSpanProcessor(OTLPSpanExporter(endpoint=settings.otel_exporter_endpoint))
@@ -74,7 +80,10 @@ def _setup_otel() -> None:
                 trace.set_tracer_provider(provider)
                 log.info("otel_otlp_configured", endpoint=settings.otel_exporter_endpoint)
             except ImportError:
-                log.warning("otel_otlp_unavailable", hint="pip install opentelemetry-exporter-otlp-proto-http")
+                log.warning(
+                    "otel_otlp_unavailable",
+                    hint="pip install opentelemetry-exporter-otlp-proto-http",
+                )
 
         FastAPIInstrumentor.instrument_app(app, excluded_urls="/health,/metrics")
         log.info("otel_instrumented")
@@ -107,7 +116,9 @@ async def request_middleware(request: Request, call_next: object) -> Response:
     REQUEST_LATENCY.labels(request.method, request.url.path).observe(duration)
 
     response.headers["X-Request-ID"] = request_id
-    log.info("request", method=request.method, status=response.status_code, duration_s=round(duration, 3))
+    log.info(
+        "request", method=request.method, status=response.status_code, duration_s=round(duration, 3)
+    )
     return response
 
 
@@ -115,7 +126,7 @@ async def request_middleware(request: Request, call_next: object) -> Response:
 @app.exception_handler(RagAgentError)
 async def domain_error_handler(request: Request, exc: RagAgentError) -> JSONResponse:
     log.warning("domain_error", code=exc.code, detail=exc.message)
-    status_code = 400 if isinstance(exc, (IngestError, GuardrailError)) else 500
+    status_code = 400 if isinstance(exc, IngestError | GuardrailError) else 500
     if isinstance(exc, LLMError):
         status_code = 502
     return JSONResponse(status_code=status_code, content={"error": exc.code, "detail": exc.message})
@@ -132,7 +143,17 @@ async def metrics() -> Response:
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
-from rag_agent.api.v1 import agent, agent_run, chat, evaluate, ingest, jobs, keys, ocr, webhooks
+from rag_agent.api.v1 import (  # noqa: E402
+    agent,
+    agent_run,
+    chat,
+    evaluate,
+    ingest,
+    jobs,
+    keys,
+    ocr,
+    webhooks,
+)
 
 app.include_router(chat.router, prefix="/api/v1")
 app.include_router(agent.router, prefix="/api/v1")

@@ -4,11 +4,11 @@ import io
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from PIL import Image
 from httpx import ASGITransport, AsyncClient
+from PIL import Image
 
 from rag_agent.api.main import app
-from rag_agent.services.ocr.schemas import DocumentType, ExtractionResult, InvoiceSchema, FieldValue
+from rag_agent.services.ocr.schemas import DocumentType, ExtractionResult, FieldValue, InvoiceSchema
 
 HEADERS = {"X-API-Key": "test-key"}
 

@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import uuid
+from collections.abc import AsyncGenerator
 from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime, Integer, String, func
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.ext.asyncio import AsyncAttrs, AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import AsyncAttrs, DeclarativeBase, Mapped, mapped_column
 
 from rag_agent.core.config import settings
 
@@ -50,6 +51,6 @@ engine = create_async_engine(settings.database_url, echo=False, pool_pre_ping=Tr
 async_session: async_sessionmaker[AsyncSession] = async_sessionmaker(engine, expire_on_commit=False)
 
 
-async def get_db() -> AsyncSession:  # type: ignore[misc]
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with async_session() as session:
-        yield session  # type: ignore[misc]
+        yield session

@@ -1,9 +1,7 @@
 """Text embedding via OpenRouter-compatible endpoint (text-embedding-3-small)."""
 
 import structlog
-from openai import AsyncOpenAI
 
-from rag_agent.core.config import settings
 from rag_agent.services.llm_client import get_client
 
 log = structlog.get_logger()

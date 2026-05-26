@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Any, TypedDict
+from typing import Any, TypedDict
 
 import structlog
 from langgraph.graph import END, StateGraph
-from langgraph.graph.message import add_messages
 
 from rag_agent.core.config import settings
 from rag_agent.services import llm_client
@@ -28,6 +27,7 @@ class AgentState(TypedDict):
 
 
 # ── Nodes ───────────────────────────────────────────────────────────────────
+
 
 async def node_retrieve(state: AgentState) -> AgentState:
     chunks = await retrieve(state["query"])
@@ -68,7 +68,7 @@ async def node_web_search(state: AgentState) -> AgentState:
 
 async def node_generate(state: AgentState) -> AgentState:
     chunks = state["context_chunks"]
-    context = "\n\n".join(f"[{i+1}] {c['text']}" for i, c in enumerate(chunks))
+    context = "\n\n".join(f"[{i + 1}] {c['text']}" for i, c in enumerate(chunks))
 
     messages: list[dict[str, str]] = [
         {
@@ -115,6 +115,7 @@ async def node_check_hallucination(state: AgentState) -> AgentState:
 
 # ── Routing conditions ───────────────────────────────────────────────────────
 
+
 def route_after_grade(state: AgentState) -> str:
     """If avg retrieval score < 0.5 and no web search yet → web_search, else generate."""
     if state.get("hallucination_score", 1.0) < 0.5 and not state.get("web_searched"):
@@ -132,6 +133,7 @@ def route_after_hallucination(state: AgentState) -> str:
 
 # ── Build graph ──────────────────────────────────────────────────────────────
 
+
 def build_rag_graph() -> Any:
     graph = StateGraph(AgentState)
 
@@ -143,16 +145,24 @@ def build_rag_graph() -> Any:
 
     graph.set_entry_point("retrieve")
     graph.add_edge("retrieve", "grade_relevance")
-    graph.add_conditional_edges("grade_relevance", route_after_grade, {
-        "web_search": "web_search",
-        "generate": "generate",
-    })
+    graph.add_conditional_edges(
+        "grade_relevance",
+        route_after_grade,
+        {
+            "web_search": "web_search",
+            "generate": "generate",
+        },
+    )
     graph.add_edge("web_search", "generate")
     graph.add_edge("generate", "check_hallucination")
-    graph.add_conditional_edges("check_hallucination", route_after_hallucination, {
-        "retrieve": "retrieve",
-        "end": END,
-    })
+    graph.add_conditional_edges(
+        "check_hallucination",
+        route_after_hallucination,
+        {
+            "retrieve": "retrieve",
+            "end": END,
+        },
+    )
 
     return graph.compile()
 

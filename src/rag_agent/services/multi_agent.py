@@ -27,7 +27,7 @@ MAX_STEPS = 8
 
 class AgentStep(TypedDict):
     step: int
-    type: str          # "thought" | "tool_call" | "observation" | "answer"
+    type: str  # "thought" | "tool_call" | "observation" | "answer"
     content: str
     tool: str | None
     done: bool
@@ -67,6 +67,7 @@ Rules:
 
 # ── Nodes ─────────────────────────────────────────────────────────────────────
 
+
 async def node_react_step(state: MultiAgentState) -> MultiAgentState:
     """Single ReAct iteration: think → act → observe."""
     steps = list(state["steps"])
@@ -105,11 +106,21 @@ async def node_react_step(state: MultiAgentState) -> MultiAgentState:
 
     # Final answer
     if action == "answer" or step_n >= MAX_STEPS:
-        steps.append(AgentStep(step=step_n, type="answer", content=action_input, tool=None, done=True))
-        return {**state, "steps": steps, "step_count": step_n, "final_answer": action_input, "done": True}
+        steps.append(
+            AgentStep(step=step_n, type="answer", content=action_input, tool=None, done=True)
+        )
+        return {
+            **state,
+            "steps": steps,
+            "step_count": step_n,
+            "final_answer": action_input,
+            "done": True,
+        }
 
     # Tool call
-    steps.append(AgentStep(step=step_n, type="tool_call", content=action_input, tool=action, done=False))
+    steps.append(
+        AgentStep(step=step_n, type="tool_call", content=action_input, tool=action, done=False)
+    )
 
     tool = TOOL_MAP.get(action)
     if tool:
@@ -121,7 +132,9 @@ async def node_react_step(state: MultiAgentState) -> MultiAgentState:
         observation = f"Unknown tool '{action}'. Available: {', '.join(TOOL_MAP)}"
 
     observation = observation[:1500]  # cap observation length
-    steps.append(AgentStep(step=step_n, type="observation", content=observation, tool=action, done=False))
+    steps.append(
+        AgentStep(step=step_n, type="observation", content=observation, tool=action, done=False)
+    )
     log.info("agent_step", step=step_n, tool=action, obs_len=len(observation))
 
     return {**state, "steps": steps, "step_count": step_n, "done": False}
@@ -135,14 +148,19 @@ def route_continue_or_end(state: MultiAgentState) -> str:
 
 # ── Build graph ───────────────────────────────────────────────────────────────
 
+
 def build_multi_agent_graph() -> Any:
     graph = StateGraph(MultiAgentState)
     graph.add_node("react_step", node_react_step)
     graph.set_entry_point("react_step")
-    graph.add_conditional_edges("react_step", route_continue_or_end, {
-        "react_step": "react_step",
-        "end": END,
-    })
+    graph.add_conditional_edges(
+        "react_step",
+        route_continue_or_end,
+        {
+            "react_step": "react_step",
+            "end": END,
+        },
+    )
     return graph.compile()
 
 
@@ -157,6 +175,7 @@ def get_multi_agent_graph() -> Any:
 
 
 # ── Public API ────────────────────────────────────────────────────────────────
+
 
 async def run_multi_agent(
     objective: str,

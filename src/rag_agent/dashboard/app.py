@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import time
 from pathlib import Path
 
 import httpx
@@ -25,6 +24,7 @@ st.sidebar.caption("rag-agent v0.1.0")
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
 
 def api_get(path: str) -> dict[str, object] | None:
     try:
@@ -100,13 +100,17 @@ if PAGE == "💬 Chat":
                 with col2:
                     usage = result.get("usage", {})
                     if usage:
-                        st.caption(f"Tokens: {usage.get('prompt_tokens', 0)} prompt + {usage.get('completion_tokens', 0)} completion")
+                        st.caption(
+                            f"Tokens: {usage.get('prompt_tokens', 0)} prompt + {usage.get('completion_tokens', 0)} completion"
+                        )
 
                 sources = result.get("sources", [])
                 if sources:
                     with st.expander(f"📚 Sources ({len(sources)})"):
                         for i, src in enumerate(sources):
-                            st.markdown(f"**[{i+1}]** `{src.get('source', '?')}` — score: `{src.get('score', 0):.3f}`")
+                            st.markdown(
+                                f"**[{i + 1}]** `{src.get('source', '?')}` — score: `{src.get('score', 0):.3f}`"
+                            )
                             st.caption(str(src.get("text", ""))[:300])
 
                 st.session_state.messages.append({"role": "assistant", "content": answer})
@@ -158,7 +162,12 @@ elif PAGE == "📥 Ingestion":
     if st.button("Vérifier") and job_id:
         job = api_get(f"/api/v1/jobs/{job_id}")
         if job:
-            status_color = {"SUCCESS": "green", "FAILURE": "red", "PENDING": "gray", "STARTED": "blue"}
+            status_color = {
+                "SUCCESS": "green",
+                "FAILURE": "red",
+                "PENDING": "gray",
+                "STARTED": "blue",
+            }
             s = str(job.get("status", ""))
             st.markdown(f"**Statut** : :{status_color.get(s, 'gray')}[{s}]")
             if job.get("result"):
@@ -224,8 +233,9 @@ elif PAGE == "🔑 API Keys":
     if st.button("Générer") and owner:
         import hashlib
         import secrets
+
         raw = secrets.token_urlsafe(32)
-        st.success(f"Clé générée (sauvegardez-la, elle ne sera plus affichée) :")
+        st.success("Clé générée (sauvegardez-la, elle ne sera plus affichée) :")
         st.code(raw)
         st.caption(f"Hash SHA-256 à stocker en base : `{hashlib.sha256(raw.encode()).hexdigest()}`")
 

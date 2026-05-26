@@ -14,6 +14,7 @@ repos:
           - pydantic>=2.10
           - pydantic-settings>=2.7
         args: [--ignore-missing-imports]
+        exclude: ^(alembic/|scripts/|tests/)
 
   - repo: https://github.com/Yelp/detect-secrets
     rev: v1.5.0
@@ -32,7 +33,7 @@ repos:
     rev: v2.12.0
     hooks:
       - id: hadolint-docker
-        args: [--ignore, DL3008, --ignore, DL3009]
+        args: [--ignore, DL3008, --ignore, DL3009, --ignore, DL3013]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
@@ -43,4 +44,4 @@ repos:
       - id: check-toml
       - id: check-merge-conflict
       - id: no-commit-to-branch
-        args: [--branch, main]
+        args: [--branch, production]

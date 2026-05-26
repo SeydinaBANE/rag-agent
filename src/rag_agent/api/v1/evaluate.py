@@ -60,13 +60,18 @@ async def evaluate(
     )
 
     questions, answers, contexts, ground_truths = [], [], [], []
-    for sample, result in zip(samples, pipeline_results):
-        if isinstance(result, Exception):
-            log.warning("eval_sample_failed", question=sample["question"][:60], error=str(result))
+    for sample, pipeline_result in zip(samples, pipeline_results, strict=False):
+        if isinstance(pipeline_result, BaseException):
+            log.warning(
+                "eval_sample_failed", question=sample["question"][:60], error=str(pipeline_result)
+            )
             continue
         questions.append(sample["question"])
-        answers.append(str(result["answer"]))
-        contexts.append([c["text"] for c in result.get("sources", [])] or [sample.get("context", "")])
+        answers.append(str(pipeline_result["answer"]))  # type: ignore[index]
+        contexts.append(
+            [c["text"] for c in pipeline_result.get("sources", [])]  # type: ignore[union-attr]
+            or [sample.get("context", "")]
+        )
         ground_truths.append(sample.get("ground_truth", ""))
 
     if not questions:
@@ -81,15 +86,15 @@ async def evaluate(
     }
     scores = await asyncio.get_event_loop().run_in_executor(None, _run_ragas, ragas_data)
 
-    result = EvalResult(
+    eval_result = EvalResult(
         faithfulness=scores["faithfulness"],
         answer_relevancy=scores["answer_relevancy"],
         context_recall=scores["context_recall"],
         n_samples=len(questions),
         passed=scores["faithfulness"] >= FAITHFULNESS_THRESHOLD,
     )
-    log.info("eval_done", **scores, n_samples=len(questions), passed=result.passed)
-    return result
+    log.info("eval_done", **scores, n_samples=len(questions), passed=eval_result.passed)
+    return eval_result
 
 
 def _run_ragas(data: dict[str, Any]) -> dict[str, float]:
@@ -97,7 +102,11 @@ def _run_ragas(data: dict[str, Any]) -> dict[str, float]:
     try:
         from datasets import Dataset  # type: ignore[import]
         from ragas import evaluate  # type: ignore[import]
-        from ragas.metrics import answer_relevancy, context_recall, faithfulness  # type: ignore[import]
+        from ragas.metrics import (  # type: ignore[import]
+            answer_relevancy,
+            context_recall,
+            faithfulness,
+        )
     except ImportError as exc:
         raise HTTPException(  # type: ignore[misc]
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

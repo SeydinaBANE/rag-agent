@@ -38,7 +38,7 @@ def load_messages(session_id: str) -> list[dict[str, str]]:
         raw = r.get(_key(session_id))
         if not raw:
             return []
-        return json.loads(raw)
+        return json.loads(raw)  # type: ignore[no-any-return]
     except Exception as exc:
         log.warning("memory_load_error", session_id=session_id, error=str(exc))
         return []
@@ -68,9 +68,7 @@ async def compress_if_needed(session_id: str) -> list[dict[str, str]]:
     old_msgs = messages[:-COMPRESS_TO]
     recent_msgs = messages[-COMPRESS_TO:]
 
-    old_text = "\n".join(
-        f"{m['role'].upper()}: {m['content'][:300]}" for m in old_msgs
-    )
+    old_text = "\n".join(f"{m['role'].upper()}: {m['content'][:300]}" for m in old_msgs)
 
     from rag_agent.services import llm_client
 
@@ -90,7 +88,12 @@ async def compress_if_needed(session_id: str) -> list[dict[str, str]]:
         *recent_msgs,
     ]
     save_messages(session_id, compressed)
-    log.info("memory_compressed", session_id=session_id, old_count=len(old_msgs), summary_len=len(summary))
+    log.info(
+        "memory_compressed",
+        session_id=session_id,
+        old_count=len(old_msgs),
+        summary_len=len(summary),
+    )
     return compressed
 
 

@@ -33,9 +33,9 @@ def main() -> None:
     args = parser.parse_args()
 
     try:
-        from unsloth import FastLanguageModel  # type: ignore[import]
-        from trl import SFTTrainer, TrainingArguments  # type: ignore[import]
         from datasets import Dataset  # type: ignore[import]
+        from trl import SFTTrainer, TrainingArguments  # type: ignore[import]
+        from unsloth import FastLanguageModel  # type: ignore[import]
     except ImportError:
         print("Install finetune extras: pip install -e '.[finetune]'")
         sys.exit(1)
@@ -55,7 +55,15 @@ def main() -> None:
     model = FastLanguageModel.get_peft_model(
         model,
         r=args.lora_r,
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+        target_modules=[
+            "q_proj",
+            "k_proj",
+            "v_proj",
+            "o_proj",
+            "gate_proj",
+            "up_proj",
+            "down_proj",
+        ],
         lora_alpha=args.lora_r * 2,
         lora_dropout=0.05,
         bias="none",
@@ -109,7 +117,9 @@ def main() -> None:
 
     if args.export_gguf:
         print("Exporting to GGUF (q4_k_m)…")
-        model.save_pretrained_gguf(str(output_path / "gguf"), tokenizer, quantization_method="q4_k_m")
+        model.save_pretrained_gguf(
+            str(output_path / "gguf"), tokenizer, quantization_method="q4_k_m"
+        )
         print("GGUF saved. Load with: ollama create rag-agent -f Modelfile")
 
 

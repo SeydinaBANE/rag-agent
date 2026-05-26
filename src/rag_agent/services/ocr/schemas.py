@@ -72,7 +72,7 @@ class ExtractionResult(BaseModel):
         if self.structured is None:
             return {}
         result: dict[str, float] = {}
-        for name, val in self.structured.__class__.model_fields.items():
+        for name, _val in self.structured.__class__.model_fields.items():
             field_val = getattr(self.structured, name, None)
             if isinstance(field_val, FieldValue):
                 result[name] = field_val.confidence
@@ -99,7 +99,6 @@ Return a JSON object with these fields (include a "confidence" 0.0-1.0 for each)
   "items": [{"description": "...", "qty": 1, "unit_price": 123.45, "total": 123.45}]
 }
 Set confidence lower when a field is unclear or inferred.""",
-
     DocumentType.RECEIPT: """Extract all receipt fields from this document.
 Return a JSON object with "confidence" 0.0-1.0 per field:
 {
@@ -110,7 +109,6 @@ Return a JSON object with "confidence" 0.0-1.0 per field:
   "payment_method": {"value": "card|cash|...", "confidence": 0.8},
   "items": [{"name": "...", "qty": 1, "price": 42.50}]
 }""",
-
     DocumentType.CONTRACT: """Extract key contract information from this document.
 Return a JSON object with "confidence" 0.0-1.0 per field:
 {
@@ -121,7 +119,6 @@ Return a JSON object with "confidence" 0.0-1.0 per field:
   "jurisdiction": {"value": "...", "confidence": 0.8},
   "key_clauses": ["Payment terms: ...", "Termination: ..."]
 }""",
-
     DocumentType.FORM: """Extract all form fields and their values from this document.
 Return a JSON object:
 {

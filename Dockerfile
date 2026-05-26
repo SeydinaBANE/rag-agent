@@ -6,7 +6,7 @@ FROM python:${PYTHON_VERSION}-slim AS builder
 
 WORKDIR /build
 
-RUN pip install --no-cache-dir uv
+RUN pip install --no-cache-dir "uv>=0.5"
 
 COPY pyproject.toml README.md ./
 COPY src/ src/
@@ -32,8 +32,8 @@ COPY --from=builder /build/.venv /app/.venv
 
 # Copy source
 COPY src/ src/
-COPY alembic.ini* ./
-COPY alembic/ alembic/ 2>/dev/null || true
+COPY alembic.ini ./
+COPY alembic/ alembic/
 
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \

@@ -32,6 +32,7 @@ class AgentRunResponse(BaseModel):
 
 # ── Sync run ──────────────────────────────────────────────────────────────────
 
+
 @router.post("", response_model=AgentRunResponse)
 async def run_agent(
     request: AgentRunRequest,
@@ -56,6 +57,7 @@ async def run_agent(
 
 # ── Streaming SSE ─────────────────────────────────────────────────────────────
 
+
 @router.get("/stream")
 async def stream_agent(
     objective: str = Query(..., min_length=1),
@@ -71,6 +73,7 @@ async def stream_agent(
         data: {"step": 1, "type": "observation", "content": "...", "tool": "web_search", "done": false}
         data: {"step": 2, "type": "answer", "content": "...", "tool": null, "done": true}
     """
+
     async def _generate() -> object:
         async for step in stream_multi_agent(objective=objective, session_id=session_id):
             payload = json.dumps(dict(step))
@@ -85,6 +88,7 @@ async def stream_agent(
 
 
 # ── Session management ────────────────────────────────────────────────────────
+
 
 @router.get("/sessions/{session_id}")
 async def get_session(

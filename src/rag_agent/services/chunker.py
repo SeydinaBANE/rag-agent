@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import re
-
 from rag_agent.core.config import settings
 
 
 class Chunk:
-    __slots__ = ("text", "index", "metadata")
+    __slots__ = ("index", "metadata", "text")
 
     def __init__(self, text: str, index: int, metadata: dict[str, str] | None = None) -> None:
         self.text = text

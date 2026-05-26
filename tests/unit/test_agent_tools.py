@@ -1,12 +1,10 @@
 """Unit tests for agent tools — no external calls."""
 
-import pytest
-
 from rag_agent.services.agent_tools import (
+    TOOL_MAP,
     FetchUrlTool,
     GenerateReportTool,
     SQLQueryTool,
-    TOOL_MAP,
     get_tools_description,
 )
 
@@ -47,13 +45,14 @@ async def test_fetch_url_rejects_non_http() -> None:
 async def test_generate_report_basic() -> None:
     tool = GenerateReportTool()
     import json
-    payload = json.dumps({
-        "title": "Test Report",
-        "company": "ACME Corp",
-        "sections": [
-            {"heading": "Summary", "content": "ACME is a leading company."}
-        ]
-    })
+
+    payload = json.dumps(
+        {
+            "title": "Test Report",
+            "company": "ACME Corp",
+            "sections": [{"heading": "Summary", "content": "ACME is a leading company."}],
+        }
+    )
     result = await tool.run(payload)
     assert "# Test Report" in result
     assert "ACME Corp" in result

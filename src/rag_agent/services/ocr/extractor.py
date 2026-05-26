@@ -19,7 +19,6 @@ from rag_agent.services.ocr.schemas import (
     EXTRACTION_PROMPTS,
     ContractSchema,
     DocumentType,
-    ExtractionResult,
     FieldValue,
     FormSchema,
     InvoiceSchema,
@@ -33,22 +32,25 @@ VISION_MODEL = "google/gemini-flash-1.5"  # supports vision via OpenRouter
 
 # ── Tesseract OCR ─────────────────────────────────────────────────────────────
 
+
 def run_tesseract(image_bytes: bytes, lang: str = "fra+eng") -> str:
     """Extract raw text via Tesseract. Returns empty string on failure."""
     try:
+        import io
+
         import pytesseract
         from PIL import Image
-        import io
 
         image = Image.open(io.BytesIO(image_bytes))
         text = pytesseract.image_to_string(image, lang=lang)
-        return text.strip()
+        return text.strip()  # type: ignore[no-any-return]
     except Exception as exc:
         log.warning("tesseract_error", error=str(exc))
         return ""
 
 
 # ── LLM Vision extraction ─────────────────────────────────────────────────────
+
 
 async def extract_with_vision(
     image_bytes: bytes,
@@ -125,7 +127,7 @@ def _parse_json_response(raw: str) -> dict[str, Any]:
             raw = match.group()
 
     try:
-        return json.loads(raw)
+        return json.loads(raw)  # type: ignore[no-any-return]
     except json.JSONDecodeError:
         log.warning("json_parse_failed", raw_preview=raw[:200])
         return {}
@@ -144,6 +146,7 @@ def _detect_mime(data: bytes) -> str:
 
 
 # ── Schema mapping ────────────────────────────────────────────────────────────
+
 
 def _build_field(raw: Any) -> FieldValue | None:
     if raw is None:

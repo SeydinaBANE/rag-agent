@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import structlog
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
-from pydantic import BaseModel
 
 from rag_agent.api.v1.deps import require_api_key
 from rag_agent.services.ocr.pipeline import run_ocr_pipeline
@@ -14,7 +13,10 @@ log = structlog.get_logger()
 router = APIRouter(prefix="/ocr", tags=["ocr"])
 
 ALLOWED_MIME = {
-    "image/png", "image/jpeg", "image/tiff", "image/webp",
+    "image/png",
+    "image/jpeg",
+    "image/tiff",
+    "image/webp",
     "application/pdf",
 }
 MAX_SIZE_MB = 20
@@ -42,7 +44,9 @@ async def list_schemas() -> dict[str, object]:
 @router.post("/extract", response_model=ExtractionResult)
 async def extract_document(
     file: UploadFile = File(..., description="Image or PDF to extract"),
-    doc_type: str | None = Form(None, description="Force document type (invoice|receipt|contract|form)"),
+    doc_type: str | None = Form(
+        None, description="Force document type (invoice|receipt|contract|form)"
+    ),
     lang: str = Form("fra+eng", description="Tesseract language(s)"),
     use_vision: bool = Form(True, description="Use LLM vision for structured extraction"),
     _: str = Depends(require_api_key),
@@ -96,7 +100,7 @@ async def extract_from_url(
             r.raise_for_status()
             content = r.content
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=f"Failed to fetch URL: {exc}")
+        raise HTTPException(status_code=400, detail=f"Failed to fetch URL: {exc}") from exc
 
     result = await run_ocr_pipeline(content, doc_type=doc_type)
     return result

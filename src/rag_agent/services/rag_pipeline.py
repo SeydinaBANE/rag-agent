@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator
+from typing import Any
 
 import structlog
 from prometheus_client import Counter, Histogram
 
 from rag_agent.core.config import settings
-from rag_agent.core.exceptions import LLMError
 from rag_agent.services import llm_client
 from rag_agent.services.retriever import retrieve
 from rag_agent.services.semantic_cache import get_cached, set_cached
@@ -28,7 +28,7 @@ async def answer(
     query: str,
     model: str | None = None,
     session_id: str | None = None,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     """Full RAG pipeline. Returns answer + sources + usage."""
 
     # 1. Semantic cache check
@@ -45,7 +45,7 @@ async def answer(
         RETRIEVAL_SCORE.observe(float(chunks[0].get("score", 0)))
 
     # 3. Build context
-    context_parts = [f"[{i+1}] {c['text']}" for i, c in enumerate(chunks)]
+    context_parts = [f"[{i + 1}] {c['text']}" for i, c in enumerate(chunks)]
     context = "\n\n".join(context_parts) if context_parts else "No relevant context found."
 
     # 4. Build messages
@@ -71,7 +71,7 @@ async def answer(
     sources = [
         {
             "text": str(c.get("text", ""))[:200],
-            "source": str(c.get("metadata", {}).get("source", "")),  # type: ignore[union-attr]
+            "source": str(c.get("metadata", {}).get("source", "")),
             "score": round(float(c.get("score", 0)), 3),
         }
         for c in chunks
@@ -91,7 +91,10 @@ async def answer_stream(
 ) -> AsyncGenerator[str, None]:
     """Stream tokens. Sources are sent as final SSE event."""
     chunks = await retrieve(query)
-    context = "\n\n".join(f"[{i+1}] {c['text']}" for i, c in enumerate(chunks)) or "No relevant context."
+    context = (
+        "\n\n".join(f"[{i + 1}] {c['text']}" for i, c in enumerate(chunks))
+        or "No relevant context."
+    )
 
     messages: list[dict[str, str]] = [
         {"role": "system", "content": SYSTEM_PROMPT},

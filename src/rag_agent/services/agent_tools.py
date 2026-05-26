@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any
 
 import httpx
 import structlog
@@ -22,11 +21,12 @@ class Tool:
         self.name = name
         self.description = description
 
-    async def run(self, input: str) -> str:  # noqa: A002
+    async def run(self, input: str) -> str:
         raise NotImplementedError
 
 
 # ── Web Search (DuckDuckGo via API) ──────────────────────────────────────────
+
 
 class WebSearchTool(Tool):
     def __init__(self) -> None:
@@ -45,10 +45,7 @@ class WebSearchTool(Tool):
 
             async with AsyncDDGS() as ddgs:
                 results = await ddgs.atext(input, max_results=5)
-            formatted = [
-                f"[{r['title']}]({r['href']})\n{r['body']}"
-                for r in results
-            ]
+            formatted = [f"[{r['title']}]({r['href']})\n{r['body']}" for r in results]
             return "\n\n---\n\n".join(formatted) if formatted else "No results found."
         except ImportError:
             return await self._fallback_search(input)
@@ -72,6 +69,7 @@ class WebSearchTool(Tool):
 
 
 # ── URL Fetcher ───────────────────────────────────────────────────────────────
+
 
 class FetchUrlTool(Tool):
     def __init__(self) -> None:
@@ -101,6 +99,7 @@ class FetchUrlTool(Tool):
 
 # ── RAG Search (internal vector store) ───────────────────────────────────────
 
+
 class RAGSearchTool(Tool):
     def __init__(self) -> None:
         super().__init__(
@@ -120,7 +119,7 @@ class RAGSearchTool(Tool):
             if not chunks:
                 return "No relevant documents found in the knowledge base."
             parts = [
-                f"[Source: {c.get('metadata', {}).get('source', 'unknown')}] "  # type: ignore[union-attr]
+                f"[Source: {c.get('metadata', {}).get('source', 'unknown')}] "
                 f"(score: {float(c.get('score', 0)):.2f})\n{c['text']}"
                 for c in chunks[:4]
             ]
@@ -130,6 +129,7 @@ class RAGSearchTool(Tool):
 
 
 # ── SQL Query ─────────────────────────────────────────────────────────────────
+
 
 class SQLQueryTool(Tool):
     def __init__(self) -> None:
@@ -168,6 +168,7 @@ class SQLQueryTool(Tool):
 
 # ── Report Generator ──────────────────────────────────────────────────────────
 
+
 class GenerateReportTool(Tool):
     def __init__(self) -> None:
         super().__init__(
@@ -184,7 +185,11 @@ class GenerateReportTool(Tool):
             data = json.loads(input)
         except json.JSONDecodeError:
             # Treat raw text as content to format
-            data = {"title": "Research Report", "company": "", "sections": [{"heading": "Summary", "content": input}]}
+            data = {
+                "title": "Research Report",
+                "company": "",
+                "sections": [{"heading": "Summary", "content": input}],
+            }
 
         lines = [
             f"# {data.get('title', 'Report')}",
@@ -218,7 +223,4 @@ TOOL_MAP: dict[str, Tool] = {t.name: t for t in ALL_TOOLS}
 
 
 def get_tools_description() -> str:
-    return "\n".join(
-        f"- **{t.name}**: {t.description}"
-        for t in ALL_TOOLS
-    )
+    return "\n".join(f"- **{t.name}**: {t.description}" for t in ALL_TOOLS)

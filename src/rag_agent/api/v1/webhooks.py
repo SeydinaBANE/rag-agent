@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import base64
-import io
 
 import structlog
 from fastapi import APIRouter, HTTPException, Request, status
@@ -36,7 +35,7 @@ async def minio_webhook(request: Request) -> dict[str, object]:
     try:
         body = await request.json()
     except Exception:
-        raise HTTPException(status_code=400, detail="Invalid JSON payload")
+        raise HTTPException(status_code=400, detail="Invalid JSON payload") from None
 
     records = body.get("Records", [])
     queued: list[str] = []

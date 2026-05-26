@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -49,6 +48,15 @@ def query_ollama(question: str, model: str = "rag-agent") -> str:
     return r.json()["response"]
 
 
+def _rouge1(answer: str, ground_truth: str) -> float:
+    """Simple ROUGE-1 recall: fraction of GT words present in answer."""
+    a_words = set(answer.lower().split())
+    gt_words = set(ground_truth.lower().split())
+    if not gt_words:
+        return 0.0
+    return len(a_words & gt_words) / len(gt_words)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--base", default="google/gemini-flash-1.5", help="Base model (OpenRouter)")
@@ -59,6 +67,7 @@ def main() -> None:
     args = parser.parse_args()
 
     import os
+
     api_key = args.openrouter_key or os.environ.get("OPENROUTER_API_KEY", "")
 
     samples = json.loads(Path(args.dataset).read_text())
@@ -68,7 +77,7 @@ def main() -> None:
         question = sample["question"]
         ground_truth = sample["ground_truth"]
 
-        print(f"[{i+1}/{len(samples)}] {question[:60]}…")
+        print(f"[{i + 1}/{len(samples)}] {question[:60]}…")
 
         base_answer = query_openrouter(question, args.base, api_key) if api_key else "N/A"
 
@@ -77,23 +86,16 @@ def main() -> None:
         except Exception as e:
             ft_answer = f"ERROR: {e}"
 
-        # Simple ROUGE-1 overlap as proxy score
-        def overlap(a: str, b: str) -> float:
-            a_words = set(a.lower().split())
-            b_words = set(b.lower().split())
-            gt_words = set(ground_truth.lower().split())
-            if not gt_words:
-                return 0.0
-            return len(a_words & gt_words) / len(gt_words)
-
-        results.append({
-            "question": question,
-            "ground_truth": ground_truth,
-            "base_answer": base_answer,
-            "finetuned_answer": ft_answer,
-            "base_rouge1": round(overlap(base_answer, ground_truth), 3),
-            "finetuned_rouge1": round(overlap(ft_answer, ground_truth), 3),
-        })
+        results.append(
+            {
+                "question": question,
+                "ground_truth": ground_truth,
+                "base_answer": base_answer,
+                "finetuned_answer": ft_answer,
+                "base_rouge1": round(_rouge1(base_answer, ground_truth), 3),
+                "finetuned_rouge1": round(_rouge1(ft_answer, ground_truth), 3),
+            }
+        )
 
     avg_base = sum(r["base_rouge1"] for r in results) / len(results)
     avg_ft = sum(r["finetuned_rouge1"] for r in results) / len(results)
@@ -113,7 +115,7 @@ def main() -> None:
     out.parent.mkdir(exist_ok=True)
     out.write_text(json.dumps(report, indent=2, ensure_ascii=False))
 
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print(f"Base ROUGE-1:       {avg_base:.3f}")
     print(f"Fine-tuned ROUGE-1: {avg_ft:.3f}")
     print(f"Delta:              {avg_ft - avg_base:+.3f}")

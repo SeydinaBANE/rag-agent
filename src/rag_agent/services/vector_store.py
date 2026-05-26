@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import structlog
 import chromadb
+import structlog
 from chromadb.config import Settings as ChromaSettings
 
 from rag_agent.core.config import settings
@@ -75,7 +75,7 @@ async def query_similar(
             "metadata": meta,
             "score": 1.0 - float(dist),  # cosine similarity
         }
-        for doc, meta, dist in zip(docs, metas, distances)
+        for doc, meta, dist in zip(docs, metas, distances, strict=False)
     ]
 
 

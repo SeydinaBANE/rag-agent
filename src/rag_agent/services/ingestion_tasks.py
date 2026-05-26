@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import uuid
-from pathlib import Path
 
 import structlog
 
@@ -50,11 +49,12 @@ def ingest_document(
 
     except Exception as exc:
         log.error("ingestion_error", doc_id=doc_id, error=str(exc))
-        raise self.retry(exc=exc, countdown=10)  # type: ignore[attr-defined]
+        raise self.retry(exc=exc, countdown=10) from exc  # type: ignore[attr-defined]
 
 
 async def _embed(texts: list[str]) -> list[list[float]]:
     from rag_agent.services.embedder import embed_texts
+
     return await embed_texts(texts)
 
 

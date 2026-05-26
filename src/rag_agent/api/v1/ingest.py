@@ -7,7 +7,6 @@ import structlog
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 
 from rag_agent.api.v1.deps import require_api_key
-from rag_agent.core.exceptions import IngestError
 from rag_agent.models.schemas import IngestResponse, IngestTextRequest
 from rag_agent.services.ingestion_tasks import ingest_document
 

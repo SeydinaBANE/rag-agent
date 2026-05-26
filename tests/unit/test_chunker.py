@@ -1,5 +1,3 @@
-import pytest
-
 from rag_agent.services.chunker import chunk_text
 
 

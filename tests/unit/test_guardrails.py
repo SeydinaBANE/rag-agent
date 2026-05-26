@@ -1,7 +1,7 @@
 import pytest
 
-from rag_agent.services.guardrails import check_toxicity, detect_pii, guard_input
 from rag_agent.core.exceptions import GuardrailError
+from rag_agent.services.guardrails import check_toxicity, detect_pii, guard_input
 
 
 def test_toxicity_detected() -> None:
@@ -29,12 +29,15 @@ def test_guard_input_passes_clean() -> None:
 def test_pii_detection_no_presidio(monkeypatch: pytest.MonkeyPatch) -> None:
     # When presidio is not available, should return empty list gracefully
     import rag_agent.services.guardrails as g
+
     original = g._analyzer
     g._analyzer = None
 
     # Mock the import to fail
     import builtins
+
     real_import = builtins.__import__
+
     def mock_import(name: str, *args: object, **kwargs: object) -> object:
         if name == "presidio_analyzer":
             raise ImportError("presidio not installed")

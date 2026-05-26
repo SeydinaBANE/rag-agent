@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import random
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import structlog
 from prometheus_client import Counter, Histogram
@@ -50,6 +50,7 @@ MODEL_SPEED_TIER: dict[str, int] = {
 @dataclass
 class ABTestConfig:
     """Define A/B test weights. Weights are relative (don't need to sum to 100)."""
+
     models: list[str]
     weights: list[float]
 
@@ -104,7 +105,13 @@ def track_usage(model: str, prompt_tokens: int, completion_tokens: int, latency_
 
     MODEL_COST.labels(model=model).inc(cost_usd)
     MODEL_LATENCY.labels(model=model).observe(latency_s)
-    log.info("model_usage", model=model, tokens=total_tokens, cost_usd=round(cost_usd, 6), latency_s=round(latency_s, 3))
+    log.info(
+        "model_usage",
+        model=model,
+        tokens=total_tokens,
+        cost_usd=round(cost_usd, 6),
+        latency_s=round(latency_s, 3),
+    )
 
 
 async def call_with_routing(

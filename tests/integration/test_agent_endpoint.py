@@ -18,7 +18,10 @@ async def client() -> AsyncClient:
 
 @patch("rag_agent.api.v1.agent.run_agent", new_callable=AsyncMock)
 @patch("rag_agent.api.v1.agent.guard_input", return_value="what is RAG?")
-@patch("rag_agent.api.v1.agent.guard_output", return_value={"answer": "RAG is great.", "confidence": 0.95})
+@patch(
+    "rag_agent.api.v1.agent.guard_output",
+    return_value={"answer": "RAG is great.", "confidence": 0.95},
+)
 async def test_agent_returns_answer(
     mock_guard_out: object,
     mock_guard_in: object,
@@ -44,7 +47,12 @@ async def test_agent_returns_answer(
     assert data["iterations"] == 1
 
 
-@patch("rag_agent.api.v1.agent.guard_input", side_effect=__import__("rag_agent.core.exceptions", fromlist=["GuardrailError"]).GuardrailError("toxic content"))
+@patch(
+    "rag_agent.api.v1.agent.guard_input",
+    side_effect=__import__("rag_agent.core.exceptions", fromlist=["GuardrailError"]).GuardrailError(
+        "toxic content"
+    ),
+)
 async def test_agent_guardrail_blocks(mock_guard: object, client: AsyncClient) -> None:
     response = await client.post(
         "/api/v1/agent",

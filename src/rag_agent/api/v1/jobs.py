@@ -1,7 +1,7 @@
 """Job status tracking for async ingestion tasks."""
 
 from celery.result import AsyncResult
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 
 from rag_agent.api.v1.deps import require_api_key
 from rag_agent.core.celery_app import celery_app

@@ -25,11 +25,10 @@ async def evaluate_single(
 ) -> dict:
     """Evaluate one sample. Returns metrics dict."""
     from rag_agent.services.ocr.pipeline import run_ocr_pipeline
-    from rag_agent.services.ocr.schemas import FieldValue
 
     doc_id = sample["id"]
     doc_type = sample["doc_type"]
-    ground_truth = sample["ground_truth"]
+    _ground_truth = sample["ground_truth"]
     required_fields = sample.get("required_fields", [])
     min_conf = sample.get("min_field_confidence", 0.70)
 
@@ -107,7 +106,7 @@ async def main_async(args: argparse.Namespace) -> int:
     out.parent.mkdir(exist_ok=True)
     out.write_text(json.dumps(report, indent=2))
 
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print(f"Passed:   {passed}/{total_evaluated}")
     print(f"Accuracy: {report['accuracy']:.1%}")
     print(f"Report → {out}")

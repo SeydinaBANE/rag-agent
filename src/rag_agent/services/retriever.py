@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 from collections import Counter
+from typing import Any
 
 import structlog
 
@@ -14,7 +15,7 @@ from rag_agent.services.vector_store import query_similar
 log = structlog.get_logger()
 
 
-async def retrieve(query: str, top_k: int | None = None) -> list[dict[str, object]]:
+async def retrieve(query: str, top_k: int | None = None) -> list[dict[str, Any]]:
     """Hybrid retrieval: dense + BM25 fusion, then optional cross-encoder rerank."""
     k = top_k or settings.top_k
     query_emb = await embed_query(query)
@@ -53,7 +54,9 @@ def _bm25_scores(query: str, documents: list[str], k1: float = 1.5, b: float = 0
             tf = doc_terms.get(term, 0)
             if tf == 0:
                 continue
-            idf = math.log((len(documents) + 1) / (1 + sum(1 for d in documents if term in d.lower())))
+            idf = math.log(
+                (len(documents) + 1) / (1 + sum(1 for d in documents if term in d.lower()))
+            )
             tf_norm = (tf * (k1 + 1)) / (tf + k1 * (1 - b + b * doc_len / avg_len))
             score += idf * tf_norm
         scores.append(score)
@@ -62,10 +65,10 @@ def _bm25_scores(query: str, documents: list[str], k1: float = 1.5, b: float = 0
 
 
 def _rrf_fuse(
-    dense_results: list[dict[str, object]],
+    dense_results: list[dict[str, Any]],
     bm25_scores: list[float],
     rrf_k: int = 60,
-) -> list[dict[str, object]]:
+) -> list[dict[str, Any]]:
     """Reciprocal Rank Fusion of dense and BM25 rankings."""
     n = len(dense_results)
     # Dense ranking (already sorted by score desc)
@@ -83,9 +86,9 @@ def _rrf_fuse(
 
 async def _cross_encoder_rerank(
     query: str,
-    results: list[dict[str, object]],
+    results: list[dict[str, Any]],
     top_k: int,
-) -> list[dict[str, object]]:
+) -> list[dict[str, Any]]:
     """Rerank with a local cross-encoder model. Raises ImportError if not installed."""
     from sentence_transformers import CrossEncoder  # type: ignore[import]
 
@@ -94,7 +97,7 @@ async def _cross_encoder_rerank(
     ce_scores = model.predict(pairs).tolist()
 
     reranked = sorted(
-        zip(results, ce_scores),
+        zip(results, ce_scores, strict=False),
         key=lambda x: x[1],
         reverse=True,
     )

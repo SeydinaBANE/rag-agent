@@ -7,8 +7,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 # ── Chat ────────────────────────────────────────────────────────────────────
+
 
 class ChatRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=4096, description="User question")
@@ -32,6 +32,7 @@ class ChatResponse(BaseModel):
 
 # ── Ingest ──────────────────────────────────────────────────────────────────
 
+
 class IngestResponse(BaseModel):
     job_id: str
     filename: str
@@ -45,6 +46,7 @@ class IngestTextRequest(BaseModel):
 
 # ── Jobs ────────────────────────────────────────────────────────────────────
 
+
 class JobStatus(BaseModel):
     job_id: str
     status: str  # PENDING | STARTED | SUCCESS | FAILURE
@@ -53,6 +55,7 @@ class JobStatus(BaseModel):
 
 
 # ── API Keys ────────────────────────────────────────────────────────────────
+
 
 class KeyCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
@@ -72,6 +75,7 @@ class KeyCreated(KeyInfo):
 
 
 # ── Eval ────────────────────────────────────────────────────────────────────
+
 
 class EvalResult(BaseModel):
     faithfulness: float

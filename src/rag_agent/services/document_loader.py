@@ -37,6 +37,7 @@ def load_bytes(content: bytes, filename: str) -> str:
 
 # ── PDF ─────────────────────────────────────────────────────────────────────
 
+
 def _load_pdf(path: Path) -> str:
     return _load_pdf_bytes(path.read_bytes())
 
@@ -84,6 +85,7 @@ def _ocr_pdf(content: bytes) -> str:
 
 # ── DOCX ─────────────────────────────────────────────────────────────────────
 
+
 def _load_docx(path: Path) -> str:
     return _load_docx_bytes(path.read_bytes())
 
@@ -100,6 +102,7 @@ def _load_docx_bytes(content: bytes) -> str:
 
 
 # ── HTML ─────────────────────────────────────────────────────────────────────
+
 
 def _load_html(path: Path) -> str:
     return _load_html_bytes(path.read_bytes())

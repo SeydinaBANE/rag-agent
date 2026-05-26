@@ -26,7 +26,7 @@ async def chat(
     )
     return ChatResponse(
         answer=str(result["answer"]),
-        sources=[SourceChunk(**s) for s in result["sources"]],  # type: ignore[arg-type]
+        sources=[SourceChunk(**s) for s in result["sources"]],  # type: ignore[union-attr,arg-type]
         cached=bool(result["cached"]),
         usage=result["usage"],  # type: ignore[arg-type]
     )

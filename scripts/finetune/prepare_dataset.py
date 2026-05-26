@@ -14,7 +14,6 @@ import json
 import sys
 from pathlib import Path
 
-
 SYSTEM_PROMPT = (
     "You are an expert assistant. Answer questions precisely based on the provided context."
 )

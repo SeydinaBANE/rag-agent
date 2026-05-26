@@ -40,7 +40,10 @@ async def list_keys(
     _: str = Depends(require_api_key),
 ) -> list[KeyInfo]:
     rows = (await db.execute(select(ApiKey).where(ApiKey.is_active.is_(True)))).scalars().all()
-    return [KeyInfo(id=r.id, name=r.name, created_at=r.created_at, last_used_at=r.last_used_at) for r in rows]
+    return [
+        KeyInfo(id=r.id, name=r.name, created_at=r.created_at, last_used_at=r.last_used_at)
+        for r in rows
+    ]
 
 
 @router.delete("/{key_id}", status_code=status.HTTP_204_NO_CONTENT)
