@@ -41,7 +41,7 @@ class WebSearchTool(Tool):
 
     async def run(self, input: str) -> str:
         try:
-            from duckduckgo_search import AsyncDDGS  # type: ignore[import]
+            from duckduckgo_search import AsyncDDGS  # type: ignore[import,attr-defined]
 
             async with AsyncDDGS() as ddgs:
                 results = await ddgs.atext(input, max_results=5)

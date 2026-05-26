@@ -1,10 +1,10 @@
 """OpenRouter LLM client — drop-in openai-compatible."""
 
 from collections.abc import AsyncGenerator
+from typing import Any
 
 import structlog
 from openai import AsyncOpenAI
-from openai.types.chat import ChatCompletionMessageParam
 
 from rag_agent.core.config import settings
 from rag_agent.core.exceptions import LLMError
@@ -29,7 +29,7 @@ def get_client() -> AsyncOpenAI:
 
 
 async def complete(
-    messages: list[ChatCompletionMessageParam],
+    messages: list[dict[str, Any]],
     model: str | None = None,
     temperature: float = 0.2,
     max_tokens: int = 1024,
@@ -62,7 +62,7 @@ async def complete(
 
 
 async def stream(
-    messages: list[ChatCompletionMessageParam],
+    messages: list[dict[str, Any]],
     model: str | None = None,
     temperature: float = 0.2,
     max_tokens: int = 1024,

@@ -1,6 +1,7 @@
 """Chat endpoints: standard Q&A and SSE streaming."""
 
 import json
+from collections.abc import AsyncGenerator
 
 import structlog
 from fastapi import APIRouter, Depends
@@ -38,7 +39,7 @@ async def chat_stream(
     model: str | None = None,
     _: str = Depends(require_api_key),
 ) -> StreamingResponse:
-    async def _event_generator() -> object:
+    async def _event_generator() -> AsyncGenerator[str, None]:
         async for token in answer_stream(query=query, model=model):
             payload = json.dumps({"token": token, "done": False})
             yield f"data: {payload}\n\n"

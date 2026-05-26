@@ -105,7 +105,7 @@ def _ensure_resolution(image: Image.Image, target_dpi: int, warnings: list[str])
     if w < min_width:
         scale = min_width / w
         new_size = (int(w * scale), int(h * scale))
-        image = image.resize(new_size, Image.LANCZOS)
+        image = image.resize(new_size, Image.Resampling.LANCZOS)
         warnings.append(f"Image upscaled {scale:.1f}x (original: {w}x{h})")
         log.debug("image_upscaled", scale=round(scale, 2), new_size=new_size)
     return image
@@ -119,7 +119,7 @@ def _detect_skew(image: Image.Image, n_angles: int = 180) -> float:
     """
     gray = image.convert("L")
     # Downscale for speed
-    small = gray.resize((gray.width // 4, gray.height // 4), Image.LANCZOS)
+    small = gray.resize((gray.width // 4, gray.height // 4), Image.Resampling.LANCZOS)
 
     best_angle = 0.0
     best_variance = -1.0

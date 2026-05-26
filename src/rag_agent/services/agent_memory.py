@@ -20,7 +20,7 @@ COMPRESS_TO = 8  # keep last N messages after compression
 def _redis() -> Any:
     import redis as redis_lib  # type: ignore[import]
 
-    return redis_lib.from_url(settings.redis_url, decode_responses=True)
+    return redis_lib.from_url(settings.redis_url, decode_responses=True)  # type: ignore[no-untyped-call]
 
 
 def _key(session_id: str) -> str:

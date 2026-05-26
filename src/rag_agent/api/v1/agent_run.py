@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import AsyncGenerator
 
 import structlog
 from fastapi import APIRouter, Depends, Query
@@ -74,7 +75,7 @@ async def stream_agent(
         data: {"step": 2, "type": "answer", "content": "...", "tool": null, "done": true}
     """
 
-    async def _generate() -> object:
+    async def _generate() -> AsyncGenerator[str, None]:
         async for step in stream_multi_agent(objective=objective, session_id=session_id):
             payload = json.dumps(dict(step))
             yield f"data: {payload}\n\n"

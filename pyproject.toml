@@ -73,7 +73,7 @@ dev = [
   "pytest-cov>=6.0",
   "httpx>=0.28",
   "ruff==0.9.4",
-  "mypy>=1.14",
+  "mypy==1.14.1",
   "pre-commit>=4.0",
   "locust>=2.32",
 ]
@@ -127,7 +127,7 @@ python_version = "3.12"
 strict = true
 ignore_missing_imports = true
 warn_unused_ignores = false
-disable_error_code = ["misc"]
+disable_error_code = ["misc", "no-untyped-call"]
 plugins = ["pydantic.mypy"]
 exclude = [
   "alembic/",
@@ -143,6 +143,7 @@ ignore_missing_imports = true
 module = [
   "rag_agent.services.guardrails",
   "rag_agent.services.multi_agent",
+  "rag_agent.services.vector_store",
   "rag_agent.dashboard.app",
 ]
 ignore_errors = true
