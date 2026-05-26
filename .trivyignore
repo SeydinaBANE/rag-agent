@@ -1,0 +1,5 @@
+# CVEs in the optional [finetune] extras (unsloth → diffusers).
+# These packages are not installed in the production image.
+# Mitigated by pinning diffusers>=0.38.0 in pyproject.toml.
+CVE-2026-44513
+CVE-2026-45804

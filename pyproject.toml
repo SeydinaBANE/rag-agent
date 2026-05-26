@@ -93,6 +93,7 @@ finetune = [
   "unsloth",
   "torch>=2.5",
   "transformers>=4.47",
+  "diffusers>=0.38.0",
 ]
 
 [project.scripts]
