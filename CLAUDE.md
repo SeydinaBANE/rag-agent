@@ -24,7 +24,7 @@ make test-unit      # unit tests only (no Docker needed)
 make test-integration # integration tests (requires Docker services)
 make lint           # ruff check + mypy strict
 make format         # ruff format + ruff --fix
-make up             # docker compose: app + ChromaDB + Postgres + Redis + MinIO
+make up             # docker compose: all services (app, worker, frontend, ChromaDB, Postgres, Redis, MinIO, Langfuse, Grafana, Jaeger, Flower, n8n)
 make down           # stop all services
 make logs           # tail app container logs
 make migrate        # alembic upgrade head
@@ -53,10 +53,13 @@ rag-agent eval                # run Ragas evaluation
 | Service | URL | Credentials |
 |---|---|---|
 | FastAPI / Swagger | http://localhost:8000/docs | X-API-Key header |
+| Frontend (Next.js) | http://localhost:3003 | API key via SettingsModal |
 | ChromaDB | http://localhost:8001 | — |
 | MinIO Console | http://localhost:9001 | minioadmin / minioadmin |
 | Langfuse | http://localhost:3000 | — |
 | Grafana | http://localhost:3001 | admin / admin |
+| Jaeger (OTEL UI) | http://localhost:16686 | — |
+| Flower (Celery) | http://localhost:5555 | — |
 | n8n | http://localhost:5678 | admin / admin |
 | Prometheus | http://localhost:9090 | — |
 
