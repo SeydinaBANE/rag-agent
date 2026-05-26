@@ -48,8 +48,8 @@ Run a single test: `uv run pytest tests/unit/test_guardrails.py::test_toxicity_d
 ```bash
 rag-agent create-key <name>   # bootstrap API key (writes to DB directly, no HTTP auth needed)
 rag-agent serve               # production server (no reload)
-rag-agent ingest <path>       # ingest file/directory (stub — calls service TODO)
-rag-agent eval                # run Ragas evaluation
+rag-agent ingest <path>       # STUB — not yet implemented
+rag-agent eval                # STUB — not yet implemented
 ```
 
 ## Local service URLs (after `make up`)
@@ -154,13 +154,36 @@ src/rag_agent/
 Same retrieval path but routed through the LangGraph state machine in `graph.py`. Grades chunk relevance; falls back to web search if score is low; retries generation up to 2× on hallucination.
 
 **ReAct Agent** (`POST /api/v1/agent/run`):
-`multi_agent.py` streams SSE `AgentStep` events: thought → tool_call → observation → repeat → answer. Tools available: `web_search`, `rag_search`, `calculator`, `code_runner`.
+`multi_agent.py` streams SSE `AgentStep` events: thought → tool_call → observation → repeat → answer. Tools available: `web_search` (DuckDuckGo), `fetch_url`, `rag_search`, `sql_query`, `generate_report`.
 
 **Ingest** (`POST /api/v1/ingest`):
 Upload accepted → base64-encoded → `ingest_document` Celery task dispatched → poll `/api/v1/jobs/{task_id}`. Task: `document_loader.load_bytes` → `chunker.chunk_text` → `embedder.embed_texts` → `vector_store.upsert_chunks`.
 
 **OCR** (`POST /api/v1/ocr`):
 `preprocessor.preprocess` (deskew/denoise/enhance) → `extractor.run_tesseract` → auto-detect doc type → `extractor.extract_with_vision` (vision LLM) → confidence scoring → `ExtractionResult`.
+
+## API endpoints
+
+All endpoints require `X-API-Key` header.
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/v1/chat` | POST | RAG question answering |
+| `/api/v1/chat/stream` | GET | Streaming SSE tokens |
+| `/api/v1/agent` | POST | LangGraph agent (grade → web fallback → hallucination check) |
+| `/api/v1/agent/run` | POST | ReAct multi-step agent (sync) |
+| `/api/v1/agent/run/stream` | GET | ReAct agent with SSE step-by-step |
+| `/api/v1/agent/run/sessions/{id}` | GET/DELETE | Session history / clear session |
+| `/api/v1/ingest/file` | POST | Upload PDF/DOCX/TXT async (max 50 MB) |
+| `/api/v1/ingest/text` | POST | Ingest raw text |
+| `/api/v1/jobs/{id}` | GET | Celery task status |
+| `/api/v1/ocr/extract` | POST | Image → structured JSON extraction |
+| `/api/v1/ocr/extract/url` | POST | OCR from URL |
+| `/api/v1/ocr/schemas` | GET | List supported document types |
+| `/api/v1/keys` | POST/GET | Create / list API keys |
+| `/api/v1/keys/{id}` | DELETE | Revoke key |
+| `/health` | GET | Health check |
+| `/metrics` | GET | Prometheus metrics |
 
 ## Testing notes
 - `tests/conftest.py` globally overrides `require_api_key` to bypass the DB — any request with a non-empty `X-API-Key` header passes. Do not re-apply auth overrides in individual test files.

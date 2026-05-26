@@ -44,7 +44,7 @@ class WebSearchTool(Tool):
             from duckduckgo_search import AsyncDDGS  # type: ignore[import,attr-defined]
 
             async with AsyncDDGS() as ddgs:
-                results = await ddgs.atext(input, max_results=5)
+                results = await ddgs.atext(input, max_results=settings.web_search_results)
             formatted = [f"[{r['title']}]({r['href']})\n{r['body']}" for r in results]
             return "\n\n---\n\n".join(formatted) if formatted else "No results found."
         except ImportError:
@@ -92,7 +92,7 @@ class FetchUrlTool(Tool):
                 r.raise_for_status()
                 text = re.sub(r"<[^>]+>", " ", r.text)
                 text = re.sub(r"\s+", " ", text).strip()
-                return text[:3000]  # cap to avoid context explosion
+                return text[: settings.fetch_url_max_chars]
         except Exception as exc:
             return f"Fetch failed: {exc}"
 
@@ -158,7 +158,7 @@ class SQLQueryTool(Tool):
             conn = await asyncpg.connect(settings.database_url.replace("+asyncpg", ""))
             try:
                 rows = await conn.fetch(query)
-                result = [dict(row) for row in rows[:50]]
+                result = [dict(row) for row in rows[: settings.sql_max_rows]]
                 return json.dumps(result, default=str)
             finally:
                 await conn.close()

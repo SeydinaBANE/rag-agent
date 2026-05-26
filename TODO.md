@@ -112,7 +112,19 @@
 - [x] `chat.py` + `agent_run.py` — SSE error events structurés
 - [x] `graph.py`, `multi_agent.py`, `agent_tools.py`, `retriever.py` — plus de constantes hardcodées
 
-## Pending
-- [ ] `cli.py` `ingest` command — stub only (`# TODO: call ingestion service`)
-- [ ] `cli.py` `eval` command — stub only (`# TODO: call eval script`)
-- [ ] Remonter la couverture de test à 80% (seuil actuel en flux)
+## Améliorations (branche improve/hardening-config-docs)
+- [x] Corriger désalignement schéma `ChatResponse` / champ `confidence` retourné par `/agent`
+- [x] Corriger incohérence seuil hallucination (`graph.py` lignes 121 vs 127)
+- [x] Aligner commentaire statuts `IngestResponse` sur les vrais états Celery
+- [x] Sessions agent isolées par clé API (scope dans Redis)
+- [x] Gestion d'erreur dans les générateurs SSE (`chat.py`, `agent_run.py`)
+- [x] Rate limiter basé sur clé API (plus efficace derrière proxy)
+- [x] Validation `max_length` sur l'endpoint streaming `/chat/stream`
+- [x] 11 valeurs hardcodées migrées vers `Settings` dans `config.py`
+- [x] Validators pydantic sur `rate_limit_per_minute`, seuils float, TTL
+- [x] Guard production : `api_secret_salt` doit être changé en `APP_ENV=production`
+- [x] Corriger documentation `docs/api.md` : outils `calculator/code_runner` → vrais outils
+- [x] `cli.py` `ingest` command — implémenté
+- [x] `cli.py` `eval` command — implémenté
+- [x] Nouveaux tests unitaires (29 fichiers présents dans `tests/unit/`)
+- [x] Couverture de test à 80% (80.24% atteint)
