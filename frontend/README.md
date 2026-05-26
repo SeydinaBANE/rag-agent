@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# rag-agent — Chat UI
 
-## Getting Started
+Next.js 14 chat interface for the rag-agent platform. Streams responses token-by-token from the FastAPI SSE endpoints and displays sources, confidence scores, and cache status after each answer.
 
-First, run the development server:
+## Stack
+
+- **Next.js 14** (App Router, TypeScript, Tailwind CSS)
+- **react-markdown + remark-gfm** — Markdown rendering in assistant messages
+- **fetch + ReadableStream** — SSE streaming with custom `X-API-Key` header (not `EventSource`)
+- **localStorage** — session ID and API key persistence
+
+## Local development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# From repo root — requires FastAPI running on :8000
+make frontend-install   # npm ci
+make frontend-dev       # Next.js dev server → http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The dev server proxies all `/api/*` requests to `http://localhost:8000` via `next.config.mjs` rewrites, so CORS is not an issue.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Docker
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The frontend is included in the full stack:
 
-## Learn More
+```bash
+make up   # starts frontend container on http://localhost:3003
+```
 
-To learn more about Next.js, take a look at the following resources:
+The container uses a multi-stage build (Node 20 Alpine, standalone output) and receives `API_URL=http://app:8000` at runtime so the rewrite points to the FastAPI service name inside the Docker network.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## First use
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Open the app — the SettingsModal opens automatically when no API key is stored
+2. Enter your API key (create one with `uv run rag-agent create-key myapp`)
+3. Send a message — tokens appear in real time
+4. After the response: sources expand, badges show cache hit / confidence / token count
+5. Use the ⚙️ button to change key or reset the session (clears server-side memory)
 
-## Deploy on Vercel
+## Architecture
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+app/
+├── page.tsx          → redirect to /chat
+└── chat/
+    └── page.tsx      → state management (messages, streaming, session, settings)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+components/
+├── ChatWindow.tsx    → message list + auto-scroll + empty state
+├── MessageBubble.tsx → Markdown rendering, streaming cursor, MetaBadges + SourceList
+├── InputBar.tsx      → auto-resize textarea, Enter=send / Shift+Enter=newline
+├── SettingsModal.tsx → API key input (localStorage) + session reset
+├── MetaBadges.tsx    → ⚡ Cache · Confiance X% · N tokens
+└── SourceList.tsx    → collapsible source chunks with relevance score
+
+lib/
+└── api.ts            → streamChat() + chatSync() fallback
+```
+
+## Environment
+
+| Variable | Default | Description |
+|---|---|---|
+| `API_URL` | `http://localhost:8000` | FastAPI base URL used in Next.js rewrites |
+
+Set in `docker-compose.yml` for the container; leave unset for local dev (falls back to localhost).

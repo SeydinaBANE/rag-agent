@@ -34,8 +34,11 @@ make dashboard      # Streamlit admin UI on :8501
 make eval           # RAG quality eval via Ragas (requires qa_dataset.json)
 make eval-ocr       # OCR accuracy eval → reports/ocr_eval_latest.json
 make load           # Locust headless load test: 10 users, 30s against :8000
-make build          # build Docker image
+make build          # build Docker image (FastAPI only)
 make clean          # remove __pycache__, .mypy_cache, .ruff_cache, htmlcov
+make frontend-install  # npm ci inside frontend/
+make frontend-dev      # Next.js dev server on :3000 (auto-proxies /api/* → :8000)
+make frontend-build    # Next.js production build (validates TypeScript)
 ```
 
 Run a single test file: `uv run pytest tests/unit/test_guardrails.py -v`

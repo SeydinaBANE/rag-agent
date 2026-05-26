@@ -18,12 +18,18 @@ make up                     # start all services (Docker)
 make migrate                # create DB schema
 uv run rag-agent create-key mykey   # create first API key
 make dev                    # FastAPI on :8000  →  /docs for Swagger
+make frontend-install && make frontend-dev  # chat UI on :3000
 ```
 
 ## Architecture
 
 ```mermaid
 graph TB
+    Client -->|X-API-Key| Auth
+
+    Browser -->|HTTP| Frontend["Next.js :3003\nchat UI"]
+    Frontend -->|/api/* proxy| Client
+
     Client -->|X-API-Key| Auth
 
     subgraph API ["FastAPI :8000"]
@@ -43,16 +49,19 @@ graph TB
         Retriever["Hybrid Retriever\nDense + BM25 + RRF\n+ Cross-encoder"]
         LLM["LLM Client\n(OpenRouter)"]
         Langfuse["Langfuse Tracing"]
+        Jaeger["Jaeger\nOTEL Traces"]
     end
 
     Chat --> Guard --> Cache
     Cache -->|miss| Retriever
     Retriever --> LLM --> Langfuse
+    API -->|OTLP| Jaeger
 
     Agent --> Retriever
     ReAct -->|tool_call| WebSearch & RAGSearch
 
     Ingest -->|async| Celery
+    Celery -->|monitor| Flower["Flower :5555"]
 
     subgraph Storage
         PG[("PostgreSQL\napi_keys · documents")]
@@ -97,11 +106,14 @@ All endpoints require `X-API-Key` header. See [docs/api.md](docs/api.md) for ful
 
 | Service | URL | Credentials |
 |---|---|---|
-| FastAPI | http://localhost:8000 | — |
+| FastAPI / Swagger | http://localhost:8000/docs | X-API-Key header |
+| Frontend (chat UI) | http://localhost:3003 | API key via SettingsModal |
 | ChromaDB | http://localhost:8001 | — |
 | MinIO Console | http://localhost:9001 | minioadmin / minioadmin |
-| Langfuse | http://localhost:3000 | — |
+| Langfuse (LLM tracing) | http://localhost:3000 | — |
 | Grafana | http://localhost:3001 | admin / admin |
+| Jaeger (OTEL traces) | http://localhost:16686 | — |
+| Flower (Celery tasks) | http://localhost:5555 | — |
 | n8n | http://localhost:5678 | admin / admin |
 | Prometheus | http://localhost:9090 | — |
 
@@ -118,6 +130,9 @@ make load             # Locust load test (10 users, 30s)
 make worker           # Celery worker (required for async ingest)
 make dashboard        # Streamlit admin UI on :8501
 make clean            # remove __pycache__, caches, htmlcov
+make frontend-install # npm ci inside frontend/
+make frontend-dev     # Next.js dev server on :3000 (proxies /api/* → :8000)
+make frontend-build   # Next.js production build
 ```
 
 ## Documentation
@@ -125,3 +140,4 @@ make clean            # remove __pycache__, caches, htmlcov
 - [docs/api.md](docs/api.md) — full API reference with request/response examples
 - [docs/finetune.md](docs/finetune.md) — fine-tuning guide (LoRA/QLoRA via Unsloth)
 - [docs/bruno/](docs/bruno/) — Bruno API collection for manual endpoint testing
+- [frontend/README.md](frontend/README.md) — Next.js chat UI setup and architecture

@@ -7,7 +7,7 @@
 - [x] `.pre-commit-config.yaml`
 - [x] `CLAUDE.md`
 - [x] `Dockerfile` multi-stage
-- [x] `docker-compose.yml` (app + ChromaDB + Postgres + Redis + MinIO + Langfuse + Grafana)
+- [x] `docker-compose.yml` (app + worker + frontend + ChromaDB + Postgres + Redis + MinIO + Langfuse + Grafana + Jaeger + Flower + n8n)
 - [x] `.env.example`
 - [x] `alembic` init + migration initiale
 - [x] `src/rag_agent/core/config.py` (pydantic-settings)
@@ -84,11 +84,35 @@
 
 ## Documentation
 - [x] README avec architecture diagram (Mermaid)
+- [x] `docs/api.md` — référence complète endpoints + observabilité
 - [x] `docs/finetune.md`
+- [x] `frontend/README.md`
 - [x] Postman/Bruno collection pour l'API (`docs/bruno/`)
+
+## Frontend — Interface chat Next.js ✅
+- [x] `frontend/` scaffolding (Next.js 14, App Router, TypeScript, Tailwind)
+- [x] `lib/api.ts` — `streamChat()` SSE client via fetch+ReadableStream (supporte X-API-Key)
+- [x] `components/ChatWindow.tsx` — liste messages + auto-scroll
+- [x] `components/MessageBubble.tsx` — Markdown (react-markdown + remark-gfm), curseur streaming
+- [x] `components/InputBar.tsx` — textarea auto-resize, Enter=envoi
+- [x] `components/SettingsModal.tsx` — clé API localStorage + reset session
+- [x] `components/MetaBadges.tsx` — badges cache / confiance / tokens
+- [x] `components/SourceList.tsx` — sources collapsibles avec score
+- [x] `next.config.mjs` — rewrite `/api/*` → `API_URL` (localhost en dev, `app:8000` en Docker)
+- [x] `frontend/Dockerfile` — multi-stage Node 20 Alpine, standalone output
+- [x] Makefile: `frontend-install`, `frontend-dev`, `frontend-build`
+- [x] docker-compose: service `frontend` sur :3003
+
+## Hardening config ✅
+- [x] `config.py` — validation Pydantic sur tous les seuils (rate_limit, hallucination, cache similarity)
+- [x] `config.py` — 12 nouveaux paramètres exposés (max_agent_steps, agent_temperature, web_search_results…)
+- [x] `config.py` — validator production : erreur si le sel par défaut est utilisé en prod # pragma: allowlist secret
+- [x] `main.py` — rate limiting par clé API (pas par IP)
+- [x] `agent_run.py` — sessions isolées par scope SHA-256(api_key)[:16]
+- [x] `chat.py` + `agent_run.py` — SSE error events structurés
+- [x] `graph.py`, `multi_agent.py`, `agent_tools.py`, `retriever.py` — plus de constantes hardcodées
 
 ## Pending
 - [ ] `cli.py` `ingest` command — stub only (`# TODO: call ingestion service`)
 - [ ] `cli.py` `eval` command — stub only (`# TODO: call eval script`)
-- [ ] Nouveaux tests unitaires à committer (`tests/unit/test_agent.py`, `test_chat.py`, `test_deps.py`, `test_embedder.py`, `test_evaluate.py`, `test_ingest.py`, `test_ingestion_tasks.py`, `test_jobs.py`, `test_langfuse_client.py`, `test_llm_client.py`, `test_ocr_extractor.py`, `test_ocr_pipeline.py`, `test_rag_pipeline.py`, `test_retriever.py`, `test_semantic_cache.py`, `test_vector_store.py`, `test_webhooks.py`)
 - [ ] Remonter la couverture de test à 80% (seuil actuel en flux)
