@@ -44,7 +44,7 @@ async def complete(
         with trace_generation(trace_name, model, list(messages), trace_id=trace_id) as meta:  # type: ignore[arg-type]
             response = await get_client().chat.completions.create(
                 model=model,
-                messages=messages,
+                messages=messages,  # type: ignore[arg-type]
                 temperature=temperature,
                 max_tokens=max_tokens,
             )
@@ -70,9 +70,9 @@ async def stream(
     """Yield tokens one by one."""
     model = model or settings.default_model
     try:
-        async with await get_client().chat.completions.create(
+        async with await get_client().chat.completions.create(  # type: ignore[union-attr]
             model=model,
-            messages=messages,
+            messages=messages,  # type: ignore[arg-type]
             temperature=temperature,
             max_tokens=max_tokens,
             stream=True,
