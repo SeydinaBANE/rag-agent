@@ -66,9 +66,13 @@ rag-agent eval                # run Ragas evaluation
 - `REDIS_URL` — `redis://localhost:6379/0`
 - `CHROMA_HOST` / `CHROMA_PORT` — ChromaDB (default port 8001)
 - `MINIO_ENDPOINT` / `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY`
-- `LANGFUSE_SECRET_KEY` / `LANGFUSE_PUBLIC_KEY` — LLM tracing (optional)
+- `LANGFUSE_SECRET_KEY` / `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_HOST` — LLM tracing (optional; host defaults to `http://localhost:3000`)
 - `API_SECRET_SALT` — seed for API key hashing (default `changeme` in dev)
 - `APP_ENV` — `development` (default) or `production`; production disables `/docs` and CORS wildcard
+- `LOG_LEVEL` — `INFO` (default); set to `DEBUG` for verbose output
+- `RATE_LIMIT_PER_MINUTE` — per-key request cap (default `60`)
+- `OTEL_EXPORTER_ENDPOINT` — OTLP endpoint for OpenTelemetry traces (e.g. `http://jaeger:4317`); empty disables export
+- `MINIO_BUCKET` — object storage bucket name (default `rag-documents`)
 
 All settings live in `src/rag_agent/core/config.py` (pydantic-settings `Settings` class). Never add settings elsewhere.
 
@@ -108,6 +112,7 @@ src/rag_agent/
 │   ├── agent_tools.py   # Tool registry: web_search (DuckDuckGo), rag_search, calculator, code_runner
 │   ├── model_router.py  # model selection: default/quality/ab_test/cheapest/fastest modes + cost tracking
 │   ├── guardrails.py    # PII detection (Presidio), toxicity filter, hallucination scoring
+│   ├── langfuse_client.py # LLM tracing: trace_generation() context manager; no-op when keys absent
 │   └── ocr/
 │       ├── pipeline.py  # orchestrator: preprocess → tesseract → vision LLM → validate
 │       ├── preprocessor.py # image deskew, denoise, contrast enhancement; doc type detection
@@ -142,6 +147,7 @@ Upload accepted → base64-encoded → `ingest_document` Celery task dispatched 
 - Integration tests in `tests/integration/` hit real FastAPI routes but mock downstream services (LLM, ChromaDB, etc.). They do not require Docker.
 - Manual API testing: import `docs/bruno/` into the Bruno client (or use `/docs` Swagger in dev mode).
 - `tests/load/locustfile_rag.py` runs Locust load tests; `tests/eval/` contains Ragas evaluation datasets.
+- Coverage excludes `cli.py` and `dashboard/app.py` — gaps there are expected, not regressions.
 
 ## Coding conventions
 - All code fully typed — mypy strict mode
