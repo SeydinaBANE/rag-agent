@@ -1,11 +1,25 @@
 #!/usr/bin/env python3
-"""RAG evaluation script using Ragas. Run via `make eval`."""
+"""RAG evaluation script using Ragas. Run via `make eval` or `rag-agent eval`."""
 
 import argparse
+import asyncio
 import json
 import sys
 from datetime import datetime
 from pathlib import Path
+
+
+async def _run_pipeline(samples: list[dict[str, str]]) -> list[dict[str, object]]:
+    from rag_agent.services.rag_pipeline import answer as rag_answer
+
+    results: list[dict[str, object]] = []
+    for i, sample in enumerate(samples, 1):
+        q = sample["question"]
+        print(f"  [{i}/{len(samples)}] {q[:70]}", end="", flush=True)
+        result = await rag_answer(q)
+        print(" ✓")
+        results.append(result)
+    return results
 
 
 def main() -> None:
@@ -16,9 +30,13 @@ def main() -> None:
     args = parser.parse_args()
 
     try:
-        from datasets import Dataset
-        from ragas import evaluate
-        from ragas.metrics import answer_relevancy, context_recall, faithfulness
+        from datasets import Dataset  # type: ignore[import]
+        from ragas import evaluate  # type: ignore[import]
+        from ragas.metrics import (  # type: ignore[import]
+            answer_relevancy,
+            context_recall,
+            faithfulness,
+        )
     except ImportError:
         print("Install eval extras: uv pip install -e '.[eval]'")
         sys.exit(1)
@@ -28,22 +46,26 @@ def main() -> None:
         print(f"Dataset not found: {dataset_path}")
         sys.exit(1)
 
-    samples = json.loads(dataset_path.read_text())
-    print(f"Loaded {len(samples)} samples from {dataset_path}")
+    samples: list[dict[str, str]] = json.loads(dataset_path.read_text())
+    print(f"Loaded {len(samples)} samples. Running RAG pipeline...\n")
 
-    # TODO: run samples through live RAG pipeline to collect contexts + answers
-    # For now, placeholder structure
+    pipeline_results = asyncio.run(_run_pipeline(samples))
+
     data = {
         "question": [s["question"] for s in samples],
-        "answer": ["[placeholder — run pipeline first]"] * len(samples),
-        "contexts": [["[placeholder context]"]] * len(samples),
+        "answer": [str(r["answer"]) for r in pipeline_results],
+        "contexts": [
+            [src["text"] for src in r.get("sources", [])] or [""]  # type: ignore[index]
+            for r in pipeline_results
+        ],
         "ground_truth": [s["ground_truth"] for s in samples],
     }
 
+    print("\nEvaluating with Ragas...")
     dataset = Dataset.from_dict(data)
     result = evaluate(dataset, metrics=[faithfulness, answer_relevancy, context_recall])
 
-    output = {
+    output: dict[str, object] = {
         "timestamp": datetime.utcnow().isoformat(),
         "n_samples": len(samples),
         "faithfulness": float(result["faithfulness"]),
@@ -52,11 +74,11 @@ def main() -> None:
     }
 
     out_path = Path(args.output)
-    out_path.parent.mkdir(exist_ok=True)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(output, indent=2))
     print(json.dumps(output, indent=2))
 
-    if output["faithfulness"] < args.faithfulness_threshold:
+    if float(output["faithfulness"]) < args.faithfulness_threshold:
         print(f"\nFAIL: faithfulness {output['faithfulness']:.3f} < {args.faithfulness_threshold}")
         sys.exit(1)
     print("\nPASS: all quality gates met")
