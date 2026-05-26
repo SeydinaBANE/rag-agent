@@ -21,6 +21,7 @@ jobs:
       - uses: astral-sh/setup-uv@v4
         with:
           python-version: "3.12"
+      - run: uv venv
       - run: uv pip install -e ".[dev]"
       - run: uv run ruff check src tests
       - run: uv run mypy src/rag_agent
@@ -52,6 +53,7 @@ jobs:
       - uses: astral-sh/setup-uv@v4
         with:
           python-version: "3.12"
+      - run: uv venv
       - run: uv pip install -e ".[dev,eval]"
       - run: uv run pytest --cov-report=xml
       - uses: codecov/codecov-action@v4
@@ -83,6 +85,7 @@ jobs:
           python-version: "3.12"
       - name: pip-audit
         run: |
+          uv venv
           uv pip install pip-audit
           uv run pip-audit --requirement <(uv pip compile pyproject.toml)
       - name: Trivy image scan
