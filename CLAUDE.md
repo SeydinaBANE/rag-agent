@@ -5,6 +5,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project overview
 Production-ready RAG + AI Agent platform. FastAPI microservice packaged as a Python package (`rag-agent`) and Docker image. Uses `uv` as the package manager and Python 3.12.
 
+## First-time setup
+```bash
+cp .env.example .env          # add OPENROUTER_API_KEY at minimum
+make install                  # install deps + pre-commit hooks
+make up                       # start Docker services
+make migrate                  # create DB schema (run once)
+uv run rag-agent create-key mykey  # bootstrap first API key (outputs raw key)
+make dev                      # FastAPI on :8000 → /docs for Swagger
+```
+
 ## Key commands
 ```bash
 make install        # install all optional dep groups + pre-commit hooks
@@ -30,6 +40,25 @@ make clean          # remove __pycache__, .mypy_cache, .ruff_cache, htmlcov
 
 Run a single test file: `uv run pytest tests/unit/test_guardrails.py -v`
 Run a single test: `uv run pytest tests/unit/test_guardrails.py::test_toxicity_detected -v`
+
+## CLI (`rag-agent` command)
+```bash
+rag-agent create-key <name>   # bootstrap API key (writes to DB directly, no HTTP auth needed)
+rag-agent serve               # production server (no reload)
+rag-agent ingest <path>       # ingest file/directory (stub — calls service TODO)
+rag-agent eval                # run Ragas evaluation
+```
+
+## Local service URLs (after `make up`)
+| Service | URL | Credentials |
+|---|---|---|
+| FastAPI / Swagger | http://localhost:8000/docs | X-API-Key header |
+| ChromaDB | http://localhost:8001 | — |
+| MinIO Console | http://localhost:9001 | minioadmin / minioadmin |
+| Langfuse | http://localhost:3000 | — |
+| Grafana | http://localhost:3001 | admin / admin |
+| n8n | http://localhost:5678 | admin / admin |
+| Prometheus | http://localhost:9090 | — |
 
 ## Required env vars (copy `.env.example` → `.env`)
 - `OPENROUTER_API_KEY` — OpenRouter LLM access
@@ -108,6 +137,12 @@ Upload accepted → base64-encoded → `ingest_document` Celery task dispatched 
 **OCR** (`POST /api/v1/ocr`):
 `preprocessor.preprocess` (deskew/denoise/enhance) → `extractor.run_tesseract` → auto-detect doc type → `extractor.extract_with_vision` (vision LLM) → confidence scoring → `ExtractionResult`.
 
+## Testing notes
+- `tests/conftest.py` globally overrides `require_api_key` to bypass the DB — any request with a non-empty `X-API-Key` header passes. Do not re-apply auth overrides in individual test files.
+- Integration tests in `tests/integration/` hit real FastAPI routes but mock downstream services (LLM, ChromaDB, etc.). They do not require Docker.
+- Manual API testing: import `docs/bruno/` into the Bruno client (or use `/docs` Swagger in dev mode).
+- `tests/load/locustfile_rag.py` runs Locust load tests; `tests/eval/` contains Ragas evaluation datasets.
+
 ## Coding conventions
 - All code fully typed — mypy strict mode
 - Logging: `structlog.get_logger()` only; never `print()`
@@ -117,6 +152,7 @@ Upload accepted → base64-encoded → `ingest_document` Celery task dispatched 
 - Prometheus metrics: declared at module level as `Counter`/`Histogram`, exported at `GET /metrics`
 - Auth: all `/api/v1/*` routes require `X-API-Key` header via `deps.require_api_key`
 - Optional deps: `guardrails` extras needed for Presidio; `finetune` for Unsloth; install all with `make install`
+- mypy `ignore_errors = true` applies to `guardrails`, `multi_agent`, `vector_store`, and `dashboard/app.py` — strict typing is not enforced there
 
 ## OpenRouter usage
 ```python

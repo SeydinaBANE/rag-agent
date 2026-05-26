@@ -86,3 +86,9 @@
 - [x] README avec architecture diagram (Mermaid)
 - [x] `docs/finetune.md`
 - [x] Postman/Bruno collection pour l'API (`docs/bruno/`)
+
+## Pending
+- [ ] `cli.py` `ingest` command — stub only (`# TODO: call ingestion service`)
+- [ ] `cli.py` `eval` command — stub only (`# TODO: call eval script`)
+- [ ] Nouveaux tests unitaires à committer (`tests/unit/test_agent.py`, `test_chat.py`, `test_deps.py`, `test_embedder.py`, `test_evaluate.py`, `test_ingest.py`, `test_ingestion_tasks.py`, `test_jobs.py`, `test_langfuse_client.py`, `test_llm_client.py`, `test_ocr_extractor.py`, `test_ocr_pipeline.py`, `test_rag_pipeline.py`, `test_retriever.py`, `test_semantic_cache.py`, `test_vector_store.py`, `test_webhooks.py`)
+- [ ] Remonter la couverture de test à 80% (seuil actuel en flux)

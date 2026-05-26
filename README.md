@@ -108,14 +108,19 @@ All endpoints require `X-API-Key` header. See [docs/api.md](docs/api.md) for ful
 
 ```bash
 make test-unit        # fast unit tests (no Docker)
-make test             # full suite with coverage
-make lint             # ruff + mypy
-make eval             # Ragas quality evaluation
+make test             # full suite with coverage (min 80%)
+make lint             # ruff + mypy strict
+make format           # ruff format + autofix
+make eval             # Ragas quality evaluation (requires qa_dataset.json)
+make eval-ocr         # OCR accuracy eval → reports/ocr_eval_latest.json
 make load             # Locust load test (10 users, 30s)
-make worker           # Celery worker
+make worker           # Celery worker (required for async ingest)
+make dashboard        # Streamlit admin UI on :8501
+make clean            # remove __pycache__, caches, htmlcov
 ```
 
 ## Documentation
 
 - [docs/api.md](docs/api.md) — full API reference with request/response examples
 - [docs/finetune.md](docs/finetune.md) — fine-tuning guide (LoRA/QLoRA via Unsloth)
+- [docs/bruno/](docs/bruno/) — Bruno API collection for manual endpoint testing
