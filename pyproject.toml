@@ -72,7 +72,7 @@ dev = [
   "pytest-asyncio>=0.25",
   "pytest-cov>=6.0",
   "httpx>=0.28",
-  "ruff>=0.9",
+  "ruff==0.9.4",
   "mypy>=1.14",
   "pre-commit>=4.0",
   "locust>=2.32",
