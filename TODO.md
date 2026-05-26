@@ -88,7 +88,20 @@
 - [x] Postman/Bruno collection pour l'API (`docs/bruno/`)
 
 ## Pending
-- [ ] `cli.py` `ingest` command — stub only (`# TODO: call ingestion service`)
-- [ ] `cli.py` `eval` command — stub only (`# TODO: call eval script`)
-- [ ] Nouveaux tests unitaires à committer (`tests/unit/test_agent.py`, `test_chat.py`, `test_deps.py`, `test_embedder.py`, `test_evaluate.py`, `test_ingest.py`, `test_ingestion_tasks.py`, `test_jobs.py`, `test_langfuse_client.py`, `test_llm_client.py`, `test_ocr_extractor.py`, `test_ocr_pipeline.py`, `test_rag_pipeline.py`, `test_retriever.py`, `test_semantic_cache.py`, `test_vector_store.py`, `test_webhooks.py`)
-- [ ] Remonter la couverture de test à 80% (seuil actuel en flux)
+- [x] `cli.py` `ingest` command — implémenté
+- [x] `cli.py` `eval` command — implémenté
+- [x] Nouveaux tests unitaires (29 fichiers présents dans `tests/unit/`)
+- [x] Couverture de test à 80% (80.24% atteint)
+
+## Améliorations (branche improve/hardening-config-docs)
+- [x] Corriger désalignement schéma `ChatResponse` / champ `confidence` retourné par `/agent`
+- [x] Corriger incohérence seuil hallucination (`graph.py` lignes 121 vs 127)
+- [x] Aligner commentaire statuts `IngestResponse` sur les vrais états Celery
+- [x] Sessions agent isolées par clé API (scope dans Redis)
+- [x] Gestion d'erreur dans les générateurs SSE (`chat.py`, `agent_run.py`)
+- [x] Rate limiter basé sur clé API (plus efficace derrière proxy)
+- [x] Validation `max_length` sur l'endpoint streaming `/chat/stream`
+- [x] 11 valeurs hardcodées migrées vers `Settings` dans `config.py`
+- [x] Validators pydantic sur `rate_limit_per_minute`, seuils float, TTL
+- [x] Guard production : `api_secret_salt` doit être changé en `APP_ENV=production`
+- [x] Corriger documentation `docs/api.md` : outils `calculator/code_runner` → vrais outils

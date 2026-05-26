@@ -13,8 +13,6 @@ from rag_agent.services.retriever import retrieve
 
 log = structlog.get_logger()
 
-MAX_RETRIES = 2
-
 
 class AgentState(TypedDict):
     query: str
@@ -90,7 +88,9 @@ async def node_check_hallucination(state: AgentState) -> AgentState:
     if not state.get("answer") or not state["context_chunks"]:
         return {**state, "hallucination_score": 1.0}
 
-    context = "\n".join(c["text"] for c in state["context_chunks"][:3])
+    context = "\n".join(
+        c["text"] for c in state["context_chunks"][: settings.hallucination_check_chunks]
+    )
     messages: list[dict[str, str]] = [
         {
             "role": "user",
@@ -117,15 +117,20 @@ async def node_check_hallucination(state: AgentState) -> AgentState:
 
 
 def route_after_grade(state: AgentState) -> str:
-    """If avg retrieval score < 0.5 and no web search yet → web_search, else generate."""
-    if state.get("hallucination_score", 1.0) < 0.5 and not state.get("web_searched"):
+    """If avg retrieval score below web_search_fallback_threshold and no web search yet → web_search."""
+    if state.get(
+        "hallucination_score", 1.0
+    ) < settings.web_search_fallback_threshold and not state.get("web_searched"):
         return "web_search"
     return "generate"
 
 
 def route_after_hallucination(state: AgentState) -> str:
     threshold = settings.guardrails_hallucination_threshold
-    if state["hallucination_score"] < threshold and state["iteration"] < MAX_RETRIES:
+    if (
+        state["hallucination_score"] < threshold
+        and state["iteration"] < settings.max_retrieval_retries
+    ):
         log.warning("graph_retry", score=state["hallucination_score"], iteration=state["iteration"])
         return "retrieve"  # retry the full loop
     return "end"

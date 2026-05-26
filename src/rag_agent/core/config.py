@@ -1,4 +1,4 @@
-from pydantic import field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -37,22 +37,40 @@ class Settings(BaseSettings):
     api_secret_salt: str = "changeme"
 
     # Rate limiting
-    rate_limit_per_minute: int = 60
+    rate_limit_per_minute: int = Field(default=60, ge=1, le=10000)
 
     # Guardrails
     guardrails_pii_enabled: bool = True
-    guardrails_hallucination_threshold: float = 0.75
+    guardrails_hallucination_threshold: float = Field(default=0.75, ge=0.0, le=1.0)
     guardrails_toxicity_enabled: bool = True
 
     # Semantic cache
     semantic_cache_enabled: bool = True
-    semantic_cache_similarity_threshold: float = 0.92
-    semantic_cache_ttl_seconds: int = 3600
+    semantic_cache_similarity_threshold: float = Field(default=0.92, ge=0.0, le=1.0)
+    semantic_cache_ttl_seconds: int = Field(default=3600, ge=1)
 
     # RAG
     chunk_size: int = 512
     chunk_overlap: int = 64
     top_k: int = 5
+    cross_encoder_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+
+    # Agent — tunable without Docker rebuild
+    max_agent_steps: int = Field(default=8, ge=1, le=50)
+    agent_context_steps: int = Field(default=6, ge=1, le=20)
+    agent_temperature: float = Field(default=0.1, ge=0.0, le=2.0)
+    agent_max_tokens: int = Field(default=600, ge=64, le=8192)
+    max_observation_length: int = Field(default=1500, ge=100)
+    max_retrieval_retries: int = Field(default=2, ge=0, le=10)
+    hallucination_check_chunks: int = Field(default=3, ge=1, le=20)
+    # Threshold for triggering web-search fallback during retrieval grading
+    # (distinct from guardrails_hallucination_threshold which governs post-generation retry)
+    web_search_fallback_threshold: float = Field(default=0.5, ge=0.0, le=1.0)
+
+    # Agent tools
+    web_search_results: int = Field(default=5, ge=1, le=20)
+    fetch_url_max_chars: int = Field(default=3000, ge=100)
+    sql_max_rows: int = Field(default=50, ge=1, le=1000)
 
     # OpenTelemetry — set to OTLP endpoint (e.g. http://jaeger:4317) to export traces
     otel_exporter_endpoint: str = ""
@@ -67,6 +85,12 @@ class Settings(BaseSettings):
         if v not in ("development", "production"):
             raise ValueError("app_env must be 'development' or 'production'")
         return v
+
+    @model_validator(mode="after")
+    def validate_production_secrets(self) -> "Settings":
+        if self.is_production and self.api_secret_salt == "changeme":  # pragma: allowlist secret
+            raise ValueError("api_secret_salt must be changed from default in production")
+        return self
 
     @property
     def is_production(self) -> bool:

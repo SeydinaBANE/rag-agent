@@ -92,7 +92,7 @@ async def _cross_encoder_rerank(
     """Rerank with a local cross-encoder model. Raises ImportError if not installed."""
     from sentence_transformers import CrossEncoder  # type: ignore[import]
 
-    model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+    model = CrossEncoder(settings.cross_encoder_model)
     pairs = [(query, str(r["text"])) for r in results]
     ce_scores = model.predict(pairs).tolist()
 

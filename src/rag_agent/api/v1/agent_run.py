@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from collections.abc import AsyncGenerator
 
@@ -16,6 +17,11 @@ from rag_agent.services.multi_agent import run_multi_agent, stream_multi_agent
 
 log = structlog.get_logger()
 router = APIRouter(prefix="/agent/run", tags=["multi-agent"])
+
+
+def _scope(api_key: str) -> str:
+    """Derive a stable, short scope token from an API key (never stored in plain text)."""
+    return hashlib.sha256(api_key.encode()).hexdigest()[:16]
 
 
 class AgentRunRequest(BaseModel):
@@ -37,7 +43,7 @@ class AgentRunResponse(BaseModel):
 @router.post("", response_model=AgentRunResponse)
 async def run_agent(
     request: AgentRunRequest,
-    _: str = Depends(require_api_key),
+    api_key: str = Depends(require_api_key),
 ) -> AgentRunResponse:
     """
     Run the multi-step ReAct agent to completion.
@@ -46,6 +52,7 @@ async def run_agent(
     result = await run_multi_agent(
         objective=request.objective,
         session_id=request.session_id,
+        scope=_scope(api_key),
     )
     return AgentRunResponse(
         session_id=result["session_id"],
@@ -61,9 +68,9 @@ async def run_agent(
 
 @router.get("/stream")
 async def stream_agent(
-    objective: str = Query(..., min_length=1),
+    objective: str = Query(..., min_length=1, max_length=2000),
     session_id: str | None = Query(None),
-    _: str = Depends(require_api_key),
+    api_key: str = Depends(require_api_key),
 ) -> StreamingResponse:
     """
     Stream agent steps as Server-Sent Events.
@@ -74,12 +81,19 @@ async def stream_agent(
         data: {"step": 1, "type": "observation", "content": "...", "tool": "web_search", "done": false}
         data: {"step": 2, "type": "answer", "content": "...", "tool": null, "done": true}
     """
+    scope = _scope(api_key)
 
     async def _generate() -> AsyncGenerator[str, None]:
-        async for step in stream_multi_agent(objective=objective, session_id=session_id):
-            payload = json.dumps(dict(step))
-            yield f"data: {payload}\n\n"
-        yield "data: [DONE]\n\n"
+        try:
+            async for step in stream_multi_agent(
+                objective=objective, session_id=session_id, scope=scope
+            ):
+                payload = json.dumps(dict(step))
+                yield f"data: {payload}\n\n"
+            yield "data: [DONE]\n\n"
+        except Exception as exc:
+            log.exception("agent_stream_error", error=str(exc))
+            yield f"data: {json.dumps({'error': str(exc), 'done': True})}\n\n"
 
     return StreamingResponse(
         _generate(),
@@ -94,18 +108,18 @@ async def stream_agent(
 @router.get("/sessions/{session_id}")
 async def get_session(
     session_id: str,
-    _: str = Depends(require_api_key),
+    api_key: str = Depends(require_api_key),
 ) -> dict[str, object]:
-    """Get the message history of a session."""
-    messages = load_messages(session_id)
+    """Get the message history of a session (scoped to the calling API key)."""
+    messages = load_messages(session_id, scope=_scope(api_key))
     return {"session_id": session_id, "message_count": len(messages), "messages": messages}
 
 
 @router.delete("/sessions/{session_id}", status_code=204)
 async def clear_session(
     session_id: str,
-    _: str = Depends(require_api_key),
+    api_key: str = Depends(require_api_key),
 ) -> None:
-    """Delete a session's memory from Redis."""
-    delete_session(session_id)
+    """Delete a session's memory from Redis (scoped to the calling API key)."""
+    delete_session(session_id, scope=_scope(api_key))
     log.info("session_cleared", session_id=session_id)

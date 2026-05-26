@@ -4,7 +4,7 @@ import json
 from collections.abc import AsyncGenerator
 
 import structlog
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 
 from rag_agent.api.v1.deps import require_api_key
@@ -35,15 +35,19 @@ async def chat(
 
 @router.get("/stream")
 async def chat_stream(
-    query: str,
+    query: str = Query(..., min_length=1, max_length=4096),
     model: str | None = None,
     _: str = Depends(require_api_key),
 ) -> StreamingResponse:
     async def _event_generator() -> AsyncGenerator[str, None]:
-        async for token in answer_stream(query=query, model=model):
-            payload = json.dumps({"token": token, "done": False})
-            yield f"data: {payload}\n\n"
-        yield f"data: {json.dumps({'token': '', 'done': True})}\n\n"
+        try:
+            async for token in answer_stream(query=query, model=model):
+                payload = json.dumps({"token": token, "done": False})
+                yield f"data: {payload}\n\n"
+            yield f"data: {json.dumps({'token': '', 'done': True})}\n\n"
+        except Exception as exc:
+            log.exception("chat_stream_error", error=str(exc))
+            yield f"data: {json.dumps({'error': str(exc), 'done': True})}\n\n"
 
     return StreamingResponse(
         _event_generator(),

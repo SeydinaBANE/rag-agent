@@ -28,6 +28,7 @@ class ChatResponse(BaseModel):
     sources: list[SourceChunk]
     cached: bool
     usage: dict[str, int]
+    confidence: float | None = None
 
 
 # ── Ingest ──────────────────────────────────────────────────────────────────
@@ -36,7 +37,7 @@ class ChatResponse(BaseModel):
 class IngestResponse(BaseModel):
     job_id: str
     filename: str
-    status: str  # queued | done | error
+    status: str  # PENDING | STARTED | SUCCESS | FAILURE (Celery states)
 
 
 class IngestTextRequest(BaseModel):
