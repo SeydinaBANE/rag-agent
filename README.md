@@ -137,7 +137,9 @@ make frontend-build   # Next.js production build
 
 ## Documentation
 
-- [docs/api.md](docs/api.md) — full API reference with request/response examples
+- [docs/architecture.md](docs/architecture.md) — deep-dive: request flows, storage, security, observability
+- [docs/configuration.md](docs/configuration.md) — complete settings reference (all env vars + constraints)
+- [docs/api.md](docs/api.md) — API reference with request/response examples
 - [docs/finetune.md](docs/finetune.md) — fine-tuning guide (LoRA/QLoRA via Unsloth)
 - [docs/bruno/](docs/bruno/) — Bruno API collection for manual endpoint testing
 - [frontend/README.md](frontend/README.md) — Next.js chat UI setup and architecture
