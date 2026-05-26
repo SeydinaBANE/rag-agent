@@ -135,7 +135,7 @@ ReAct multi-step agent. Breaks the objective into thought → tool → observati
 }
 ```
 
-**Available tools:** `web_search`, `rag_search`, `calculator`, `code_runner`
+**Available tools:** `web_search`, `fetch_url`, `rag_search`, `sql_query`, `generate_report`
 
 ---
 

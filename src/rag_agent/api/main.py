@@ -35,9 +35,17 @@ app = FastAPI(
     redoc_url="/redoc" if not settings.is_production else None,
 )
 
+
 # ── Rate limiting ────────────────────────────────────────────────────────────
+def _rate_limit_key(request: Request) -> str:
+    """Use API key as rate-limit key so the limit is per-key, not per-IP.
+    Falls back to IP for unauthenticated paths (e.g. /health, /metrics)."""
+    api_key = request.headers.get("X-API-Key")
+    return api_key if api_key else str(get_remote_address(request))
+
+
 _limiter = Limiter(
-    key_func=get_remote_address,
+    key_func=_rate_limit_key,
     default_limits=[f"{settings.rate_limit_per_minute}/minute"],
 )
 app.state.limiter = _limiter

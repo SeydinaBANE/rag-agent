@@ -16,13 +16,12 @@ from typing import Any, TypedDict
 import structlog
 from langgraph.graph import END, StateGraph
 
+from rag_agent.core.config import settings
 from rag_agent.services import llm_client
 from rag_agent.services.agent_memory import append_message, compress_if_needed
 from rag_agent.services.agent_tools import TOOL_MAP, get_tools_description
 
 log = structlog.get_logger()
-
-MAX_STEPS = 8
 
 
 class AgentStep(TypedDict):
@@ -75,7 +74,7 @@ async def node_react_step(state: MultiAgentState) -> MultiAgentState:
 
     # Build conversation context from previous steps
     history = []
-    for s in steps[-6:]:  # keep last 6 steps to avoid context overflow
+    for s in steps[-settings.agent_context_steps :]:
         if s["type"] == "thought":
             history.append({"role": "assistant", "content": f"Thought: {s['content']}"})
         elif s["type"] == "observation":
@@ -87,7 +86,12 @@ async def node_react_step(state: MultiAgentState) -> MultiAgentState:
         *history,
     ]
 
-    raw, _ = await llm_client.complete(messages, model=None, temperature=0.1, max_tokens=600)
+    raw, _ = await llm_client.complete(
+        messages,
+        model=None,
+        temperature=settings.agent_temperature,
+        max_tokens=settings.agent_max_tokens,
+    )
 
     # Parse JSON response
     try:
@@ -105,7 +109,7 @@ async def node_react_step(state: MultiAgentState) -> MultiAgentState:
     log.debug("agent_thought", step=step_n, action=action)
 
     # Final answer
-    if action == "answer" or step_n >= MAX_STEPS:
+    if action == "answer" or step_n >= settings.max_agent_steps:
         steps.append(
             AgentStep(step=step_n, type="answer", content=action_input, tool=None, done=True)
         )
@@ -131,7 +135,7 @@ async def node_react_step(state: MultiAgentState) -> MultiAgentState:
     else:
         observation = f"Unknown tool '{action}'. Available: {', '.join(TOOL_MAP)}"
 
-    observation = observation[:1500]  # cap observation length
+    observation = observation[: settings.max_observation_length]
     steps.append(
         AgentStep(step=step_n, type="observation", content=observation, tool=action, done=False)
     )
@@ -141,7 +145,7 @@ async def node_react_step(state: MultiAgentState) -> MultiAgentState:
 
 
 def route_continue_or_end(state: MultiAgentState) -> str:
-    if state["done"] or state["step_count"] >= MAX_STEPS:
+    if state["done"] or state["step_count"] >= settings.max_agent_steps:
         return "end"
     return "react_step"
 
@@ -180,10 +184,11 @@ def get_multi_agent_graph() -> Any:
 async def run_multi_agent(
     objective: str,
     session_id: str | None = None,
+    scope: str = "",
 ) -> dict[str, Any]:
     """Run the agent to completion. Returns all steps + final answer."""
     sid = session_id or str(uuid.uuid4())
-    await compress_if_needed(sid)
+    await compress_if_needed(sid, scope)
 
     initial: MultiAgentState = {
         "objective": objective,
@@ -199,8 +204,8 @@ async def run_multi_agent(
     result = await graph.ainvoke(initial)
 
     # Persist to memory
-    append_message(sid, "user", objective)
-    append_message(sid, "assistant", result["final_answer"])
+    append_message(sid, "user", objective, scope)
+    append_message(sid, "assistant", result["final_answer"], scope)
 
     return {
         "session_id": sid,
@@ -214,6 +219,7 @@ async def run_multi_agent(
 async def stream_multi_agent(
     objective: str,
     session_id: str | None = None,
+    scope: str = "",
 ) -> AsyncGenerator[AgentStep, None]:
     """Stream each ReAct step as it happens."""
     sid = session_id or str(uuid.uuid4())
@@ -244,6 +250,6 @@ async def stream_multi_agent(
         if node_output.get("done"):
             break
 
-    append_message(sid, "user", objective)
+    append_message(sid, "user", objective, scope)
     if state.get("final_answer"):
-        append_message(sid, "assistant", state["final_answer"])
+        append_message(sid, "assistant", state["final_answer"], scope)

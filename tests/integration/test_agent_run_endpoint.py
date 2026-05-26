@@ -8,6 +8,8 @@ from httpx import ASGITransport, AsyncClient
 from rag_agent.api.main import app
 
 HEADERS = {"X-API-Key": "test-key"}
+# sha256("test-key")[:16] — scope derived by _scope() in agent_run.py
+_TEST_SCOPE = "62af8704764faf8e"  # pragma: allowlist secret
 
 MOCK_RESULT = {
     "session_id": "test-session-123",
@@ -80,7 +82,9 @@ async def test_run_agent_with_session_id(mock_run: AsyncMock, client: AsyncClien
         headers=HEADERS,
     )
     assert response.status_code == 200
-    mock_run.assert_called_once_with(objective="Research OpenAI", session_id="my-session")
+    mock_run.assert_called_once_with(
+        objective="Research OpenAI", session_id="my-session", scope=_TEST_SCOPE
+    )
 
 
 async def test_run_agent_empty_objective(client: AsyncClient) -> None:
@@ -107,7 +111,7 @@ async def test_run_agent_missing_key(client: AsyncClient) -> None:
         {"role": "assistant", "content": "OpenAI is...", "ts": "1234567891"},
     ],
 )
-async def test_get_session_history(mock_load: object, client: AsyncClient) -> None:
+async def test_get_session_history(mock_load: AsyncMock, client: AsyncClient) -> None:
     response = await client.get(
         "/api/v1/agent/run/sessions/test-session-123",
         headers=HEADERS,
@@ -116,12 +120,14 @@ async def test_get_session_history(mock_load: object, client: AsyncClient) -> No
     data = response.json()
     assert data["message_count"] == 2
     assert data["session_id"] == "test-session-123"
+    mock_load.assert_called_once_with("test-session-123", scope=_TEST_SCOPE)
 
 
 @patch("rag_agent.api.v1.agent_run.delete_session")
-async def test_clear_session(mock_delete: object, client: AsyncClient) -> None:
+async def test_clear_session(mock_delete: AsyncMock, client: AsyncClient) -> None:
     response = await client.delete(
         "/api/v1/agent/run/sessions/test-session-123",
         headers=HEADERS,
     )
     assert response.status_code == 204
+    mock_delete.assert_called_once_with("test-session-123", scope=_TEST_SCOPE)

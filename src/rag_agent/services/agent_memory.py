@@ -23,19 +23,21 @@ def _redis() -> Any:
     return redis_lib.from_url(settings.redis_url, decode_responses=True)  # type: ignore[no-untyped-call]
 
 
-def _key(session_id: str) -> str:
-    return f"agent:session:{session_id}:messages"
+def _key(session_id: str, scope: str = "") -> str:
+    prefix = f"agent:session:{scope}:" if scope else "agent:session:"
+    return f"{prefix}{session_id}:messages"
 
 
-def _meta_key(session_id: str) -> str:
-    return f"agent:session:{session_id}:meta"
+def _meta_key(session_id: str, scope: str = "") -> str:
+    prefix = f"agent:session:{scope}:" if scope else "agent:session:"
+    return f"{prefix}{session_id}:meta"
 
 
-def load_messages(session_id: str) -> list[dict[str, str]]:
+def load_messages(session_id: str, scope: str = "") -> list[dict[str, str]]:
     """Load message history for a session. Returns [] if not found."""
     try:
         r = _redis()
-        raw = r.get(_key(session_id))
+        raw = r.get(_key(session_id, scope))
         if not raw:
             return []
         return json.loads(raw)  # type: ignore[no-any-return]
@@ -44,24 +46,26 @@ def load_messages(session_id: str) -> list[dict[str, str]]:
         return []
 
 
-def save_messages(session_id: str, messages: list[dict[str, str]]) -> None:
+def save_messages(session_id: str, messages: list[dict[str, str]], scope: str = "") -> None:
     try:
         r = _redis()
-        r.setex(_key(session_id), SESSION_TTL, json.dumps(messages))
+        r.setex(_key(session_id, scope), SESSION_TTL, json.dumps(messages))
     except Exception as exc:
         log.warning("memory_save_error", session_id=session_id, error=str(exc))
 
 
-def append_message(session_id: str, role: str, content: str) -> list[dict[str, str]]:
-    messages = load_messages(session_id)
+def append_message(
+    session_id: str, role: str, content: str, scope: str = ""
+) -> list[dict[str, str]]:
+    messages = load_messages(session_id, scope)
     messages.append({"role": role, "content": content, "ts": str(time.time())})
-    save_messages(session_id, messages)
+    save_messages(session_id, messages, scope)
     return messages
 
 
-async def compress_if_needed(session_id: str) -> list[dict[str, str]]:
+async def compress_if_needed(session_id: str, scope: str = "") -> list[dict[str, str]]:
     """If history is too long, summarize old messages and keep recent ones."""
-    messages = load_messages(session_id)
+    messages = load_messages(session_id, scope)
     if len(messages) <= MAX_MESSAGES_BEFORE_COMPRESS:
         return messages
 
@@ -87,7 +91,7 @@ async def compress_if_needed(session_id: str) -> list[dict[str, str]]:
         {"role": "system", "content": f"[Conversation summary]: {summary}", "ts": str(time.time())},
         *recent_msgs,
     ]
-    save_messages(session_id, compressed)
+    save_messages(session_id, compressed, scope)
     log.info(
         "memory_compressed",
         session_id=session_id,
@@ -97,26 +101,26 @@ async def compress_if_needed(session_id: str) -> list[dict[str, str]]:
     return compressed
 
 
-def delete_session(session_id: str) -> None:
+def delete_session(session_id: str, scope: str = "") -> None:
     try:
         r = _redis()
-        r.delete(_key(session_id), _meta_key(session_id))
+        r.delete(_key(session_id, scope), _meta_key(session_id, scope))
     except Exception as exc:
         log.warning("memory_delete_error", session_id=session_id, error=str(exc))
 
 
-def get_session_meta(session_id: str) -> dict[str, Any]:
+def get_session_meta(session_id: str, scope: str = "") -> dict[str, Any]:
     try:
         r = _redis()
-        raw = r.get(_meta_key(session_id))
+        raw = r.get(_meta_key(session_id, scope))
         return json.loads(raw) if raw else {}
     except Exception:
         return {}
 
 
-def set_session_meta(session_id: str, meta: dict[str, Any]) -> None:
+def set_session_meta(session_id: str, meta: dict[str, Any], scope: str = "") -> None:
     try:
         r = _redis()
-        r.setex(_meta_key(session_id), SESSION_TTL, json.dumps(meta))
+        r.setex(_meta_key(session_id, scope), SESSION_TTL, json.dumps(meta))
     except Exception as exc:
         log.warning("memory_meta_error", session_id=session_id, error=str(exc))
