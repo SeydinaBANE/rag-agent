@@ -1,4 +1,4 @@
-.PHONY: help install dev test lint format build up down migrate dashboard eval load
+.PHONY: help install dev test lint format build up down migrate dashboard eval load frontend-install frontend-dev frontend-build
 
 PYTHON := python3.12
 UV     := uv
@@ -63,6 +63,15 @@ load: ## Run Locust load test (headless, 10 users, 30s)
 
 worker: ## Start Celery worker
 	$(UV) run celery -A rag_agent.core.celery_app worker --loglevel=info
+
+frontend-install: ## Install Next.js frontend dependencies
+	cd frontend && npm install
+
+frontend-dev: ## Start Next.js dev server on :3000 (requires FastAPI on :8000)
+	cd frontend && npm run dev
+
+frontend-build: ## Build Next.js for production
+	cd frontend && npm run build
 
 clean: ## Remove build artifacts and caches
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null; \

@@ -72,15 +72,20 @@ Standard RAG Q&A. Checks semantic cache first; on miss runs full retrieval pipel
 
 ---
 
-### `GET /api/v1/chat/stream?query=…&model=…`
+### `GET /api/v1/chat/stream?query=…&session_id=…&model=…`
 
-Same pipeline as `/chat` but streams tokens as SSE events.
+Same pipeline as `/chat` but streams tokens as SSE events. `query` is required (1–4096 chars). `session_id` is optional (reuses conversation memory).
 
 **Events**
 ```
 data: {"token": "RAG", "done": false}
 data: {"token": " combines", "done": false}
-data: {"token": "", "done": true}
+data: {"token": "", "done": true, "sources": [...], "cached": false, "usage": {...}}
+```
+
+**SSE error event:**
+```
+data: {"error": "LLM_ERROR: upstream timeout", "done": true}
 ```
 
 ---
@@ -135,7 +140,7 @@ ReAct multi-step agent. Breaks the objective into thought → tool → observati
 }
 ```
 
-**Available tools:** `web_search`, `rag_search`, `calculator`, `code_runner`
+**Available tools:** `web_search`, `fetch_url`, `rag_search`, `sql_query`, `generate_report`, `code_runner`
 
 ---
 
@@ -147,6 +152,11 @@ Same as `/agent/run` but streams each `AgentStep` as an SSE event.
 data: {"step": 1, "type": "thought", "content": "…", "tool": null, "done": false}
 data: {"step": 2, "type": "tool_call", "content": "…", "tool": "web_search", "done": false}
 data: {"step": 4, "type": "answer", "content": "…", "tool": null, "done": true}
+```
+
+**SSE error event** (emitted before the stream closes on any exception):
+```
+data: {"error": "human-readable message", "done": true}
 ```
 
 ---
@@ -301,6 +311,12 @@ Revoke a key. `204 No Content`.
 
 ---
 
+## Rate limiting
+
+All `/api/v1/*` endpoints are rate-limited per API key (default 60 req/min, configurable via `RATE_LIMIT_PER_MINUTE`). Exceeding the limit returns `429 Too Many Requests`. The limiter key is the `X-API-Key` header value; falls back to client IP when the header is absent.
+
+---
+
 ## Observability
 
 | Endpoint | Description |
@@ -310,4 +326,9 @@ Revoke a key. `204 No Content`.
 
 Key metrics: `http_requests_total`, `http_request_duration_seconds`, `rag_queries_total`, `llm_tokens_total`, `model_router_cost_usd_total`, `guardrail_blocked_total`, `ocr_documents_total`.
 
-Grafana dashboard auto-provisioned at http://localhost:3001 (admin/admin). Langfuse LLM tracing at http://localhost:3000.
+| Tool | URL | Purpose |
+|---|---|---|
+| Grafana | http://localhost:3001 | Dashboards (auto-provisioned, admin/admin) |
+| Langfuse | http://localhost:3000 | LLM prompt/completion traces |
+| Jaeger | http://localhost:16686 | Distributed traces (OTLP via port 4317) |
+| Flower | http://localhost:5555 | Celery task monitor |
