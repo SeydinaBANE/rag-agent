@@ -4,14 +4,14 @@ ARG PYTHON_VERSION=3.12
 # ── Stage 1: builder ────────────────────────────────────────────────────────
 FROM python:${PYTHON_VERSION}-slim AS builder
 
-WORKDIR /build
+WORKDIR /app
 
 RUN pip install --no-cache-dir "uv>=0.5"
 
 COPY pyproject.toml README.md ./
 COPY src/ src/
 
-# Install package + runtime deps into /build/.venv
+# Install package + runtime deps into /app/.venv
 RUN uv venv && \
     uv pip install --no-cache ".[guardrails]"
 
@@ -27,8 +27,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Copy virtualenv from builder
-COPY --from=builder /build/.venv /app/.venv
+# Copy virtualenv from builder (same path so shebangs resolve correctly)
+COPY --from=builder /app/.venv /app/.venv
 
 # Copy source
 COPY src/ src/

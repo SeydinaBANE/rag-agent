@@ -48,6 +48,8 @@ dependencies = [
   "httpx>=0.28",
   # Web search
   "duckduckgo-search>=6.3",
+  # Observability / tracing
+  "langfuse>=2.0,<3.0",
   # Logging
   "structlog>=24.4",
   # Rate limiting
